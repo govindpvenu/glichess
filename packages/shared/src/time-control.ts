@@ -17,8 +17,13 @@ export const TIME_CONTROLS = [
   { id: "15+10", initial: 900, increment: 10, category: "rapid" },
 ] as const satisfies readonly TimeControl[]
 
-export type TimeControlId = (typeof TIME_CONTROLS)[number]["id"]
+export type TimeControlPreset = (typeof TIME_CONTROLS)[number]
+export type TimeControlId = TimeControlPreset["id"]
 
-export function getTimeControl(id: string): TimeControl | undefined {
+export function getTimeControl(id: string): TimeControlPreset | undefined {
   return TIME_CONTROLS.find((tc) => tc.id === id)
+}
+
+export function isTimeControlId(id: string): id is TimeControlId {
+  return TIME_CONTROLS.some((tc) => tc.id === id)
 }

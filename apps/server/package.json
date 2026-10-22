@@ -10,10 +10,12 @@
     "dev": "tsx watch --env-file-if-exists=../../.env --clear-screen=false src/index.ts",
     "build": "tsup",
     "start": "node --env-file-if-exists=../../.env dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "better-auth": "^1.7.12",
+    "chess.js": "^1.4.0",
     "drizzle-orm": "^0.45.4",
     "express": "^5.3.0",
     "helmet": "^8.3.0",

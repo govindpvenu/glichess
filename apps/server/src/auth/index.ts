@@ -33,7 +33,15 @@ export const auth = betterAuth({
     anonymous({
       generateName: generateGuestName,
       onLinkAccount: ({ anonymousUser, newUser }) =>
-        transferGuestData({ guestId: anonymousUser.user.id, accountId: newUser.user.id }),
+        transferGuestData({
+          guestId: anonymousUser.user.id,
+          account: {
+            id: newUser.user.id,
+            name: newUser.user.name,
+            image: newUser.user.image ?? null,
+            isGuest: false,
+          },
+        }),
     }),
   ],
 })

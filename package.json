@@ -6,6 +6,7 @@
     "dev": "pnpm --parallel --filter \"./apps/*\" dev",
     "build": "pnpm --recursive build",
     "start": "pnpm --filter @glichess/server start",
+    "test": "pnpm --recursive test",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "typecheck": "pnpm --recursive typecheck",
@@ -20,7 +21,9 @@
     "oxfmt": "^0.74.0",
     "oxlint": "^1.89.0",
     "oxlint-tsgolint": "^7.0.2004",
-    "typescript": "~7.0.2"
+    "playwright": "^1.64.1",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.5"
   },
   "engines": {
     "node": ">=22.22.0"

@@ -2,8 +2,8 @@
 
 Realtime chess with built-in video, voice and chat on one screen. Play as a guest or sign in with Google.
 
-> Status: Phase 1 (identity). Visitors get a guest account automatically and can upgrade with Google.
-> Gameplay, chat and video land in the next phases.
+> Status: Phase 2 (core game). Guest or Google sign-in, invite links, quick pairing, server-side
+> clocks, every end condition, rematches and Glicko-2 ratings. Chat and video land next.
 
 ## Stack
 
@@ -42,6 +42,21 @@ pnpm install
 cp .env.example .env
 pnpm dev                 # web on http://localhost:5173, server on :3000
 ```
+
+## Game server
+
+- **Rules and clocks are server-side.** `apps/server/src/game/engine.ts` is a pure, synchronous
+  engine (chess.js for move legality) that takes the current time as an argument, which makes
+  clocks and every end condition unit-testable. Clients only render snapshots and send moves.
+- **Clocks** start once both players have moved; until then each side has 30 seconds to make a
+  first move or the game is aborted. A single timer per game fires at the next flag fall.
+- **State** lives in memory for fast moves. Each change is queued to Postgres in order, unfinished
+  games are restored on boot (downtime isn't charged to either clock), and pending writes are
+  flushed on shutdown.
+- **Presence**: if one player leaves an active game, the other wins by abandonment after 60 seconds
+  unless they return.
+- **Ratings** use Glicko-2 (`glicko2.ts`, tested against Glickman's worked example). Games are
+  rated only when both players are signed in.
 
 ## Authentication
 

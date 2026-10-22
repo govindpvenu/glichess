@@ -1,26 +1,12 @@
 import type { Server as HttpServer } from "node:http"
 
-import type {
-  ClientToServerEvents,
-  InterServerEvents,
-  ServerToClientEvents,
-  SocketData,
-} from "@glichess/shared"
 import { fromNodeHeaders } from "better-auth/node"
 import { Server } from "socket.io"
 
 import { auth, toPublicUser } from "./auth"
+import { registerGameHandlers } from "./game/socket-handlers"
 import { logger } from "./logger"
-
-export type IoServer = Server<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  InterServerEvents,
-  SocketData
->
-
-/** Room holding every socket (tab) a user has open. */
-export const userRoom = (userId: string) => `user:${userId}`
+import { userRoom, type IoServer } from "./realtime"
 
 export function createSocketServer(httpServer: HttpServer): IoServer {
   // The web app is served from the same origin, so no CORS configuration is needed.
@@ -53,6 +39,8 @@ export function createSocketServer(httpServer: HttpServer): IoServer {
 
     void socket.join(userRoom(user.id))
     socket.emit("system:welcome", { user, serverTime: Date.now() })
+
+    registerGameHandlers(io, socket)
 
     socket.on("system:ping", (ack) => {
       if (typeof ack === "function") ack({ serverTime: Date.now() })

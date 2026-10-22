@@ -3,6 +3,7 @@ import { createServer } from "node:http"
 import { createApp } from "./app"
 import { closeDb } from "./db"
 import { env } from "./env"
+import { gameManager, gameRoom } from "./game"
 import { logger } from "./logger"
 import { migrateIfEnabled } from "./migrate"
 import { createSocketServer } from "./socket"
@@ -16,6 +17,13 @@ try {
 
 const httpServer = createServer(createApp())
 const io = createSocketServer(httpServer)
+
+gameManager.attach((gameId, snapshot) => io.to(gameRoom(gameId)).emit("game:update", snapshot))
+try {
+  await gameManager.restore()
+} catch (error) {
+  logger.error({ err: error }, "failed to restore live games")
+}
 
 httpServer.listen(env.PORT, () => {
   logger.info(`glichess server listening on http://localhost:${env.PORT}`)
@@ -32,12 +40,15 @@ function shutdown(signal: NodeJS.Signals) {
   const forceExit = setTimeout(() => process.exit(1), 10_000)
   forceExit.unref()
 
-  void io.close(() => {
-    void closeDb().finally(() => {
-      logger.info("server closed")
-      process.exit(0)
-    })
-  })
+  void (async () => {
+    gameManager.stop()
+    // Stop taking moves, then let queued game writes reach the database before closing it.
+    await new Promise<void>((resolve) => void io.close(() => resolve()))
+    await gameManager.flush()
+    await closeDb()
+    logger.info("server closed")
+    process.exit(0)
+  })()
 }
 
 process.on("SIGTERM", shutdown)

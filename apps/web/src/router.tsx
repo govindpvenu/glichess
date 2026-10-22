@@ -9,6 +9,11 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <HomePage /> },
+      {
+        path: "game/:gameId",
+        // The board and chess libraries load only when a game is opened.
+        lazy: async () => ({ Component: (await import("@/routes/game")).GameRoute }),
+      },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

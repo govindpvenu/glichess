@@ -1,4 +1,4 @@
-import type { ClientToServerEvents, ServerToClientEvents } from "@glichess/shared"
+import type { AckResult, ClientToServerEvents, ServerToClientEvents } from "@glichess/shared"
 import { io, type Socket } from "socket.io-client"
 
 export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>
@@ -42,4 +42,11 @@ export const connectionStore = {
     }
   },
   getSnapshot: () => status,
+}
+
+/** Error message for a failed or timed-out acknowledgement, or null on success. */
+export function ackError(err: Error | null, res: AckResult<unknown> | undefined): string | null {
+  if (err) return "The server didn't respond. Check your connection."
+  if (res && !res.ok) return res.error
+  return null
 }

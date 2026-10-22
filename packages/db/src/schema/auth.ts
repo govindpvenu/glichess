@@ -1,6 +1,14 @@
 // Tables required by Better Auth (core + anonymous plugin). Column names are snake_case via
 // Drizzle's `casing` option; the TypeScript keys must match Better Auth's field names.
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import {
+  boolean,
+  doublePrecision,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core"
 
 const timestamps = {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -18,6 +26,11 @@ export const users = pgTable("users", {
   image: text(),
   /** Guest accounts created by the anonymous plugin. */
   isAnonymous: boolean().notNull().default(false),
+  // Glicko-2 rating. Not managed by Better Auth; only rated games (both players signed in) change it.
+  rating: doublePrecision().notNull().default(1500),
+  ratingDeviation: doublePrecision().notNull().default(350),
+  ratingVolatility: doublePrecision().notNull().default(0.06),
+  ratedGames: integer().notNull().default(0),
   ...timestamps,
 })
 
