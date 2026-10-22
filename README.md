@@ -2,8 +2,8 @@
 
 Realtime chess with built-in video, voice and chat on one screen. Play as a guest or sign in with Google.
 
-> Status: Phase 3 (chat). Guest or Google sign-in, invite links, quick pairing, server-side
-> clocks, every end condition, rematches, Glicko-2 ratings and in-game chat. Video lands next.
+> Status: Phase 4 (video). Guest or Google sign-in, invite links, quick pairing, server-side
+> clocks, every end condition, rematches, Glicko-2 ratings, in-game chat and video/voice calls.
 
 ## Stack
 
@@ -68,6 +68,22 @@ pnpm dev                 # web on http://localhost:5173, server on :3000
 - The server trims and collapses whitespace, caps messages at 280 characters and rate-limits
   each user with a token bucket (a burst of 5, then one every 2 seconds).
 
+## Video and voice
+
+- Peer-to-peer WebRTC between the two players, signalled over the existing Socket.IO connection.
+  The server only relays messages between the two seats; media never passes through it.
+- `apps/server/src/rtc/calls.ts` tracks which tab holds each player's seat in the call. Every
+  change (join, leave, reconnect, a second tab taking over) starts a new session number, so both
+  browsers drop their old peer connection and any signals still in flight for it.
+- Browsers use the "perfect negotiation" pattern (`apps/web/src/lib/call/call-session.ts`). White
+  creates the audio and video transceivers up front; camera and mic are switched with
+  `replaceTrack`, so toggling a device never renegotiates. Failed connections retry with ICE
+  restarts.
+- TURN relays come from Cloudflare: the server mints short-lived credentials on each call join, so
+  calls connect even behind strict NATs. Without a key configured, calls fall back to STUN only.
+- Camera and mic start on in invite games and off in quick-paired games. The choice is kept per
+  game in session storage and carried into rematches. A speaking indicator uses the Web Audio API.
+
 ## Authentication
 
 Better Auth runs inside the Express server and stores users and sessions in Neon via Drizzle.
@@ -89,6 +105,7 @@ Better Auth runs inside the Express server and stores users and sessions in Neon
 | `BETTER_AUTH_URL`                           | Public origin of the app (`http://localhost:5173` in dev)             |
 | `BETTER_AUTH_SECRET`                        | Session signing secret (`openssl rand -base64 32`)                    |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth client; redirect URI `<origin>/api/auth/callback/google` |
+| `CLOUDFLARE_TURN_KEY_ID` / `_API_TOKEN`     | Cloudflare Realtime TURN key (optional; STUN only without it)         |
 | `RUN_MIGRATIONS`                            | Apply migrations on boot (defaults to `true` in production)           |
 
 ## Scripts

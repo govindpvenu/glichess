@@ -1,5 +1,6 @@
 export * from "./chat"
 export * from "./game"
+export * from "./rtc"
 export * from "./socket"
 export * from "./time-control"
 export * from "./user"

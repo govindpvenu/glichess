@@ -4,8 +4,8 @@ import { CHAT_MAX_LENGTH, type ChatMessage, type PublicUser } from "@glichess/sh
 
 import { ClientError } from "../errors"
 import { gameManager } from "../game"
+import { RateLimiter } from "../rate-limiter"
 import { normalizeMessage } from "./normalize"
-import { RateLimiter } from "./rate-limiter"
 import * as repo from "./repository"
 
 const HISTORY_LIMIT = 200

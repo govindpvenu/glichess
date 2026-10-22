@@ -9,6 +9,7 @@ import {
   type DrawAction,
   type GamePlayer,
   type GameSnapshot,
+  type GameSource,
   type PublicUser,
   type RematchAction,
   type TimeControlPreset,
@@ -41,6 +42,7 @@ interface Seat {
 
 interface LiveGame {
   id: string
+  source: GameSource
   engine: GameEngine
   timeControl: TimeControlPreset
   rated: boolean
@@ -103,13 +105,16 @@ export class GameManager {
 
   createInvite(creator: PublicUser, timeControlId: TimeControlId, color: ColorPreference) {
     const timeControl = requireTimeControl(timeControlId)
-    const game = this.newGame(timeControl, { creatorId: creator.id, creatorColor: color })
+    const game = this.newGame(timeControl, "invite", {
+      creatorId: creator.id,
+      creatorColor: color,
+    })
     this.persist(game, () =>
       repo.insertGame({
         ...baseRow(game),
         creatorId: creator.id,
         creatorColor: color,
-        source: "invite",
+        source: game.source,
         status: "waiting",
       }),
     )
@@ -120,11 +125,11 @@ export class GameManager {
   async createMatch(
     players: { white: PublicUser; black: PublicUser },
     timeControlId: TimeControlId,
-    options: { source: "quick" | "rematch"; rematchOfId?: string },
+    options: { source: Exclude<GameSource, "invite">; rematchOfId?: string },
   ) {
     const timeControl = requireTimeControl(timeControlId)
     const profiles = await repo.getProfiles([players.white.id, players.black.id])
-    const game = this.newGame(timeControl, { creatorId: null, creatorColor: null })
+    const game = this.newGame(timeControl, options.source, { creatorId: null, creatorColor: null })
     this.seat(game, "white", players.white, profiles)
     this.seat(game, "black", players.black, profiles)
 
@@ -134,7 +139,7 @@ export class GameManager {
       repo.insertGame({
         ...baseRow(game),
         ...seatColumns(game),
-        source: options.source,
+        source: game.source,
         rematchOfId: options.rematchOfId,
         status: "active",
         startedAt: new Date(now),
@@ -289,10 +294,12 @@ export class GameManager {
 
   private newGame(
     timeControl: TimeControlPreset,
+    source: GameSource,
     creator: { creatorId: string | null; creatorColor: ColorPreference | null },
   ): LiveGame {
     const game: LiveGame = {
       id: newGameId(),
+      source,
       engine: new GameEngine({
         initialMs: timeControl.initial * 1000,
         incrementMs: timeControl.increment * 1000,
@@ -508,6 +515,7 @@ export class GameManager {
     return {
       id: game.id,
       status: engine.status,
+      source: game.source,
       rated: game.rated,
       timeControl: {
         id: game.timeControl.id,
@@ -560,6 +568,7 @@ export class GameManager {
 
     const game: LiveGame = {
       id: row.id,
+      source: row.source,
       engine,
       timeControl,
       rated: row.rated,

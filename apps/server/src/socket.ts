@@ -8,6 +8,7 @@ import { registerChatHandlers } from "./chat/socket-handlers"
 import { registerGameHandlers } from "./game/socket-handlers"
 import { logger } from "./logger"
 import { userRoom, type IoServer } from "./realtime"
+import { registerRtcHandlers } from "./rtc/socket-handlers"
 
 export function createSocketServer(httpServer: HttpServer): IoServer {
   // The web app is served from the same origin, so no CORS configuration is needed.
@@ -43,6 +44,7 @@ export function createSocketServer(httpServer: HttpServer): IoServer {
 
     registerGameHandlers(io, socket)
     registerChatHandlers(io, socket)
+    registerRtcHandlers(io, socket)
 
     socket.on("system:ping", (ack) => {
       if (typeof ack === "function") ack({ serverTime: Date.now() })

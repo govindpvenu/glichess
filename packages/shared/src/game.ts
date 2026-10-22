@@ -6,6 +6,8 @@ export type ColorPreference = Color | "random"
 
 export type GameStatus = "waiting" | "active" | "finished" | "aborted"
 export type GameResult = Color | "draw"
+/** How a game was created: an invite link, the quick-pair queue, or a rematch of another game. */
+export type GameSource = "invite" | "quick" | "rematch"
 
 export type Termination =
   | "checkmate"
@@ -46,6 +48,7 @@ export interface ClockState {
 export interface GameSnapshot {
   id: string
   status: GameStatus
+  source: GameSource
   rated: boolean
   timeControl: { id: TimeControlId; initialMs: number; incrementMs: number }
   white: GamePlayer | null

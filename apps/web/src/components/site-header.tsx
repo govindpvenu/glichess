@@ -1,4 +1,4 @@
-import { NavLink } from "react-router"
+import { NavLink, useMatch } from "react-router"
 
 import { ConnectionIndicator } from "@/components/connection-indicator"
 import { Logo } from "@/components/logo"
@@ -9,9 +9,16 @@ import { cn } from "@/lib/utils"
 const upcoming = ["Puzzles", "Leaderboard"]
 
 export function SiteHeader() {
+  // The game page spreads to three columns on wide screens; keep the header aligned with it.
+  const wide = useMatch("/game/:gameId") !== null
   return (
     <header className="border-b">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:gap-8 sm:px-6">
+      <div
+        className={cn(
+          "mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:gap-8 sm:px-6",
+          wide && "xl:max-w-[88rem]",
+        )}
+      >
         <Logo />
         <nav className="hidden items-center gap-6 text-sm sm:flex">
           <NavLink

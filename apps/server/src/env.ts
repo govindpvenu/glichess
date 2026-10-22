@@ -26,6 +26,10 @@ const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32, "Generate one with: openssl rand -base64 32"),
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
+
+  /** Cloudflare Realtime TURN key. Without it calls use STUN only, which fails behind strict NATs. */
+  CLOUDFLARE_TURN_KEY_ID: z.string().min(1).optional(),
+  CLOUDFLARE_TURN_API_TOKEN: z.string().min(1).optional(),
 })
 
 const parsed = envSchema.safeParse(process.env)

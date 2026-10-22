@@ -1,5 +1,6 @@
 import type { ChatMessage } from "./chat"
 import type { ColorPreference, GameSnapshot } from "./game"
+import type { CallJoined, MediaState, RtcSignal } from "./rtc"
 import type { TimeControlId } from "./time-control"
 import type { PublicUser } from "./user"
 
@@ -25,6 +26,13 @@ export interface ServerToClientEvents {
   "queue:matched": (payload: { gameId: string }) => void
   /** A new chat message, sent to both players. */
   "chat:message": (message: ChatMessage) => void
+
+  /** The opponent joined or left the call. Either way, any existing peer connection is stale. */
+  "rtc:peer": (payload: { gameId: string; session: number; present: boolean }) => void
+  "rtc:signal": (payload: { gameId: string; session: number; signal: RtcSignal }) => void
+  "rtc:media": (payload: { gameId: string; media: MediaState }) => void
+  /** The same player joined the call from another tab, which now owns it. */
+  "rtc:replaced": (payload: { gameId: string }) => void
 }
 
 export interface ClientToServerEvents {
@@ -50,6 +58,13 @@ export interface ClientToServerEvents {
   /** The latest messages in a game's chat, oldest first. Players only. */
   "chat:history": (payload: { gameId: string }, ack: Ack<ChatMessage[]>) => void
   "chat:send": (payload: { gameId: string; body: string }, ack: Ack<ChatMessage>) => void
+
+  /** Enters the game's video call (players only). The latest tab to join owns the player's seat. */
+  "rtc:join": (payload: { gameId: string }, ack: Ack<CallJoined>) => void
+  "rtc:leave": (payload: { gameId: string }) => void
+  /** Relayed to the opponent if `session` is still current. */
+  "rtc:signal": (payload: { gameId: string; session: number; signal: RtcSignal }) => void
+  "rtc:media": (payload: { gameId: string; media: MediaState }) => void
 }
 
 export interface InterServerEvents {}

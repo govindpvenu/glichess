@@ -1,4 +1,10 @@
-import type { ColorPreference, GameResult, GameStatus, Termination } from "@glichess/shared"
+import type {
+  ColorPreference,
+  GameResult,
+  GameSource,
+  GameStatus,
+  Termination,
+} from "@glichess/shared"
 import { sql } from "drizzle-orm"
 import { boolean, index, integer, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core"
 
@@ -17,7 +23,7 @@ export const games = pgTable(
     /** Who created an invite and which side they asked for. */
     creatorId: text().references(() => users.id, { onDelete: "set null" }),
     creatorColor: text().$type<ColorPreference>(),
-    source: text().$type<"invite" | "quick" | "rematch">().notNull(),
+    source: text().$type<GameSource>().notNull(),
     rematchOfId: text(),
 
     timeControl: text().notNull(),

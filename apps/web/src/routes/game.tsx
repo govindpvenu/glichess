@@ -2,6 +2,7 @@ import { otherColor, type Color } from "@glichess/shared"
 import { useEffect, useState, type ReactNode } from "react"
 import { Link, useNavigate, useParams } from "react-router"
 
+import { CallPanel } from "@/components/game/call-panel"
 import { ChatPanel } from "@/components/game/chat-panel"
 import { GameActions } from "@/components/game/game-actions"
 import { GameBoard } from "@/components/game/game-board"
@@ -11,7 +12,10 @@ import { MoveList } from "@/components/game/move-list"
 import { PlayerBar } from "@/components/game/player-bar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useCall } from "@/hooks/use-call"
 import { useGame } from "@/hooks/use-game"
+import { useMediaQuery } from "@/hooks/use-media-query"
+import { saveCallPrefs } from "@/lib/call/prefs"
 
 /** Route entry: remounts the page per game so state never leaks between games (e.g. rematches). */
 export function GameRoute() {
@@ -23,11 +27,18 @@ function GamePage({ gameId }: { gameId: string }) {
   const navigate = useNavigate()
   const { view, error, myColor, actions } = useGame(gameId)
   const [flipped, setFlipped] = useState(false)
+  const call = useCall(gameId, myColor, view?.snapshot.source ?? null)
+  const wide = useMediaQuery("(min-width: 80rem)")
+  const callSession = call.session
   const rematchId = view?.snapshot.rematchGameId
 
   useEffect(() => {
-    if (rematchId && myColor) void navigate(`/game/${rematchId}`)
-  }, [rematchId, myColor, navigate])
+    if (!rematchId || !myColor) return
+    // The rematch keeps the camera and mic as they are now.
+    const { audio, video } = callSession.getSnapshot()
+    saveCallPrefs(rematchId, { audio, video })
+    void navigate(`/game/${rematchId}`)
+  }, [rematchId, myColor, navigate, callSession])
 
   if (error && !view) return <GameNotFound message={error} />
   if (!view) return <GameSkeleton />
@@ -39,8 +50,25 @@ function GamePage({ gameId }: { gameId: string }) {
   const playing = snapshot.status === "active" ? myColor : null
   const lastMove = snapshot.moves.at(-1)?.uci ?? null
 
+  const callPanel = myColor && (
+    <CallPanel snapshot={snapshot} myColor={myColor} session={call.session} state={call.state} />
+  )
+  const chatPanel = (
+    <Panel title="Chat" className="h-80 lg:h-auto lg:min-h-56 lg:flex-[1.4]">
+      <ChatPanel snapshot={snapshot} myColor={myColor} />
+    </Panel>
+  )
+
   return (
-    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-4 sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-4 sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:max-w-[88rem] xl:grid-cols-[18rem_minmax(0,1fr)_19rem]">
+      {/* Wide screens: call and chat get their own column left of the board, as on lichess. */}
+      {wide && (
+        <aside className={asideClass}>
+          {callPanel}
+          {chatPanel}
+        </aside>
+      )}
+
       <section className="mx-auto flex w-full max-w-[min(100%,calc(100svh-13rem))] flex-col gap-3">
         <PlayerBar snapshot={snapshot} color={top} offset={offset} isYou={top === myColor} />
         <GameBoard
@@ -53,9 +81,12 @@ function GamePage({ gameId }: { gameId: string }) {
         <PlayerBar snapshot={snapshot} color={bottom} offset={offset} isYou={bottom === myColor} />
       </section>
 
-      <aside className="flex min-h-0 flex-col gap-4 lg:max-h-[calc(100svh-7rem)]">
+      <aside className={asideClass}>
+        {!wide && callPanel}
+
         <Panel
           title="Game"
+          className="shrink-0"
           meta={`${snapshot.timeControl.id} · ${snapshot.rated ? "Rated" : "Casual"}`}
         >
           <div className="space-y-4 p-4">
@@ -82,13 +113,14 @@ function GamePage({ gameId }: { gameId: string }) {
           <MoveList moves={snapshot.moves} />
         </Panel>
 
-        <Panel title="Chat" className="h-80 lg:h-auto lg:min-h-56 lg:flex-[1.4]">
-          <ChatPanel snapshot={snapshot} myColor={myColor} />
-        </Panel>
+        {!wide && chatPanel}
       </aside>
     </div>
   )
 }
+
+/** Side columns fill the viewport height and scroll as a whole if their panels don't fit. */
+const asideClass = "flex min-h-0 flex-col gap-4 lg:max-h-[calc(100svh-7rem)] lg:overflow-y-auto"
 
 function Panel({
   title,
@@ -114,7 +146,8 @@ function Panel({
 
 function GameSkeleton() {
   return (
-    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:max-w-[88rem] xl:grid-cols-[18rem_minmax(0,1fr)_19rem]">
+      <Skeleton className="hidden h-64 w-full xl:block" />
       <div className="mx-auto flex w-full max-w-[min(100%,calc(100svh-13rem))] flex-col gap-3">
         <Skeleton className="h-10 w-full" />
         <Skeleton className="aspect-square w-full" />
