@@ -1,4 +1,5 @@
 import { pino } from "pino"
+
 import { env, isProduction } from "./env"
 
 export const logger = pino({

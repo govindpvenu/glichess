@@ -15,8 +15,6 @@ export interface ClientToServerEvents {
   "system:ping": (ack: (payload: PongPayload) => void) => void
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface InterServerEvents {}
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SocketData {}

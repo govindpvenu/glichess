@@ -2,10 +2,10 @@
   "name": "@glichess/server",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
   "files": [
     "dist"
   ],
+  "type": "module",
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=../../.env --clear-screen=false src/index.ts",
     "build": "tsup",

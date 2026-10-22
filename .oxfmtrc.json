@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": false,
+  "printWidth": 100,
+  "trailingComma": "all",
+  "sortImports": true,
+  "sortTailwindcss": {
+    "stylesheet": "./apps/web/src/index.css",
+    "functions": ["cn", "cva", "clsx"]
+  },
+  "ignorePatterns": ["pnpm-lock.yaml", "**/dist", "packages/db/drizzle"]
+}

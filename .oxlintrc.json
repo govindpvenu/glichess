@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "react", "jsx-a11y"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "options": {
+    "typeAware": true,
+    "reportUnusedDisableDirectives": "warn"
+  },
+  "env": {
+    "es2024": true
+  },
+  "ignorePatterns": ["**/dist", "packages/db/drizzle", "apps/web/public"],
+  "rules": {
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "typescript/consistent-type-imports": ["error", { "fixStyle": "inline-type-imports" }],
+    "typescript/no-explicit-any": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "import/no-cycle": "error",
+    "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }],
+    // Effects legitimately return a cleanup on some paths and nothing on others.
+    "typescript/consistent-return": "off"
+  },
+  "overrides": [
+    {
+      "files": ["apps/server/**", "packages/**", "*.config.ts"],
+      "env": { "node": true }
+    },
+    {
+      "files": ["apps/web/**"],
+      "env": { "browser": true },
+      "rules": {
+        "react/react-in-jsx-scope": "off",
+        "react/rules-of-hooks": "error",
+        "react/exhaustive-deps": "error",
+        "react/only-export-components": ["error", { "allowConstantExport": true }]
+      }
+    },
+    {
+      "files": ["apps/web/src/components/ui/**"],
+      "rules": { "react/only-export-components": "off" }
+    }
+  ]
+}

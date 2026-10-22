@@ -1,4 +1,5 @@
 import type { Server as HttpServer } from "node:http"
+
 import type {
   ClientToServerEvents,
   InterServerEvents,
@@ -6,6 +7,7 @@ import type {
   SocketData,
 } from "@glichess/shared"
 import { Server } from "socket.io"
+
 import { logger } from "./logger"
 
 export type IoServer = Server<

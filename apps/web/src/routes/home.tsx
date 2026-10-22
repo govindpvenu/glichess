@@ -1,5 +1,6 @@
 import { TIME_CONTROLS } from "@glichess/shared"
 import { Link2 } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 
 const categoryLabel = { bullet: "Bullet", blitz: "Blitz", rapid: "Rapid" } as const

@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs"
+
 import { defineConfig } from "drizzle-kit"
 
 const rootEnv = new URL("../../.env", import.meta.url)

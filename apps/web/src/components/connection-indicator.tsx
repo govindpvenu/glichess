@@ -15,10 +15,7 @@ export function ConnectionIndicator() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div
-          role="status"
-          className="flex h-8 items-center gap-2 rounded-md border px-2.5 font-mono text-xs text-muted-foreground"
-        >
+        <output className="flex h-8 items-center gap-2 rounded-md border px-2.5 font-mono text-xs text-muted-foreground">
           <span
             className={cn(
               "size-1.5 rounded-full",
@@ -30,7 +27,7 @@ export function ConnectionIndicator() {
           <span className="tabular-nums">
             {status === "connected" && latency !== null ? `${latency}ms` : labels[status]}
           </span>
-        </div>
+        </output>
       </TooltipTrigger>
       <TooltipContent>Realtime server: {labels[status].toLowerCase()}</TooltipContent>
     </Tooltip>

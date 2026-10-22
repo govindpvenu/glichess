@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
-import { THEME_STORAGE_KEY, ThemeContext, type ResolvedTheme, type Theme } from "@/lib/theme"
+
+import {
+  isTheme,
+  THEME_STORAGE_KEY,
+  ThemeContext,
+  type ResolvedTheme,
+  type Theme,
+} from "@/lib/theme"
 
 const darkQuery = "(prefers-color-scheme: dark)"
 
 function readStoredTheme(): Theme {
   try {
     const value = localStorage.getItem(THEME_STORAGE_KEY)
-    if (value === "light" || value === "dark" || value === "system") return value
+    if (isTheme(value)) return value
   } catch {
     // Storage can be unavailable (private mode, blocked cookies).
   }

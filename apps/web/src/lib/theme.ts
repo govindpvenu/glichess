@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react"
 
-export type Theme = "light" | "dark" | "system"
+export const THEMES = ["light", "dark", "system"] as const
+export type Theme = (typeof THEMES)[number]
 export type ResolvedTheme = "light" | "dark"
 
 /** Must match the key read by public/theme-init.js. */
@@ -10,6 +11,10 @@ export interface ThemeContextValue {
   theme: Theme
   resolvedTheme: ResolvedTheme
   setTheme: (theme: Theme) => void
+}
+
+export function isTheme(value: unknown): value is Theme {
+  return typeof value === "string" && (THEMES as readonly string[]).includes(value)
 }
 
 export const ThemeContext = createContext<ThemeContextValue | null>(null)

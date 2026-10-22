@@ -6,15 +6,15 @@ Realtime chess with built-in video, voice and chat on one screen. Play as a gues
 
 ## Stack
 
-| Layer    | Tech                                                         |
-| -------- | ------------------------------------------------------------ |
-| Web      | React 19, Vite, Tailwind CSS v4, shadcn/ui, React Router     |
-| Server   | Express 5, Socket.IO, pino                                   |
-| Data     | Neon Postgres, Drizzle ORM, Redis (Upstash)                  |
-| Realtime | Socket.IO for game state and signaling, WebRTC for media     |
-| Chess    | chess.js (server-authoritative validation), react-chessboard |
-| Auth     | Better Auth (anonymous guests + Google)                      |
-| Tooling  | pnpm workspaces, TypeScript, ESLint, Prettier, Docker        |
+| Layer    | Tech                                                              |
+| -------- | ----------------------------------------------------------------- |
+| Web      | React 19, Vite, Tailwind CSS v4, shadcn/ui, React Router          |
+| Server   | Express 5, Socket.IO, pino                                        |
+| Data     | Neon Postgres, Drizzle ORM, Redis (Upstash)                       |
+| Realtime | Socket.IO for game state and signaling, WebRTC for media          |
+| Chess    | chess.js (server-authoritative validation), react-chessboard      |
+| Auth     | Better Auth (anonymous guests + Google)                           |
+| Tooling  | pnpm workspaces, TypeScript 7, Oxlint (type-aware), Oxfmt, Docker |
 
 ## Layout
 
@@ -44,14 +44,14 @@ pnpm dev                 # web on http://localhost:5173, server on :3000
 
 ## Scripts
 
-| Command                           | What it does                                |
-| --------------------------------- | ------------------------------------------- |
-| `pnpm dev`                        | Run web and server with hot reload          |
-| `pnpm build`                      | Build every package                         |
-| `pnpm start`                      | Run the built server (serves the web build) |
-| `pnpm lint` / `pnpm typecheck`    | Static checks                               |
-| `pnpm format`                     | Format with Prettier                        |
-| `pnpm db:generate` / `db:migrate` | Create and apply Drizzle migrations         |
+| Command                           | What it does                                                |
+| --------------------------------- | ----------------------------------------------------------- |
+| `pnpm dev`                        | Run web and server with hot reload                          |
+| `pnpm build`                      | Build every package                                         |
+| `pnpm start`                      | Run the built server (serves the web build)                 |
+| `pnpm lint` / `pnpm typecheck`    | Static checks                                               |
+| `pnpm format`                     | Format with Oxfmt (also sorts imports and Tailwind classes) |
+| `pnpm db:generate` / `db:migrate` | Create and apply Drizzle migrations                         |
 
 ## Deployment
 

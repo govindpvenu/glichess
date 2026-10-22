@@ -25,9 +25,11 @@ socket.on("connect_error", () => setStatus("disconnected"))
 socket.io.on("reconnect_attempt", () => setStatus("connecting"))
 
 export const connectionStore = {
-  subscribe(listener: () => void) {
+  subscribe: (listener: () => void) => {
     listeners.add(listener)
-    return () => listeners.delete(listener)
+    return () => {
+      listeners.delete(listener)
+    }
   },
   getSnapshot: () => status,
 }

@@ -1,4 +1,5 @@
 import { createServer } from "node:http"
+
 import { createApp } from "./app"
 import { env } from "./env"
 import { logger } from "./logger"
@@ -22,7 +23,7 @@ function shutdown(signal: NodeJS.Signals) {
   const forceExit = setTimeout(() => process.exit(1), 10_000)
   forceExit.unref()
 
-  io.close(() => {
+  void io.close(() => {
     logger.info("server closed")
     process.exit(0)
   })
