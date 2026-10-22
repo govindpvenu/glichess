@@ -1,0 +1,33 @@
+{
+  "name": "@glichess/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env --clear-screen=false src/index.ts",
+    "build": "tsup",
+    "start": "node --env-file-if-exists=../../.env dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.4",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
+    "postgres": "^3.4.9",
+    "socket.io": "^4.8.4",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@glichess/db": "workspace:*",
+    "@glichess/shared": "workspace:*",
+    "@types/express": "^5.0.6",
+    "pino-pretty": "^13.2.0",
+    "tsup": "^9.0.0",
+    "tsx": "^4.23.15"
+  }
+}

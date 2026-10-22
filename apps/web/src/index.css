@@ -1,0 +1,133 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-500.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";
+@import "@fontsource/ibm-plex-mono/latin-600.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Graphite & Signal
+ * Neutral graphite surfaces with a single signal-orange accent. The accent is
+ * reserved for live state: the running clock, the last move, the active speaker.
+ */
+:root {
+  --radius: 0.5rem;
+
+  --background: #f4f4f1;
+  --foreground: #17171a;
+  --card: #ffffff;
+  --card-foreground: #17171a;
+  --popover: #ffffff;
+  --popover-foreground: #17171a;
+  --primary: #17171a;
+  --primary-foreground: #f4f4f1;
+  --secondary: #eeeeea;
+  --secondary-foreground: #17171a;
+  --muted: #eeeeea;
+  --muted-foreground: #6f6d67;
+  --accent: #eeeeea;
+  --accent-foreground: #17171a;
+  --destructive: #e5484d;
+  --border: #e2e1dc;
+  --input: #e2e1dc;
+  --ring: #17171a;
+
+  --signal: #ff4f1a;
+  --signal-foreground: #ffffff;
+  --success: #30a46c;
+
+  --board-light: #edebe6;
+  --board-dark: #b9b3a8;
+  --board-highlight: rgb(255 79 26 / 0.28);
+}
+
+.dark {
+  --background: #0c0c0e;
+  --foreground: #ecece8;
+  --card: #131316;
+  --card-foreground: #ecece8;
+  --popover: #131316;
+  --popover-foreground: #ecece8;
+  --primary: #ecece8;
+  --primary-foreground: #0c0c0e;
+  --secondary: #1a1a1e;
+  --secondary-foreground: #ecece8;
+  --muted: #1a1a1e;
+  --muted-foreground: #85858c;
+  --accent: #1f1f24;
+  --accent-foreground: #ecece8;
+  --destructive: #e5484d;
+  --border: #24242a;
+  --input: #2a2a30;
+  --ring: #ecece8;
+
+  --signal: #ff5e2b;
+  --signal-foreground: #0c0c0e;
+  --success: #3dd68c;
+
+  --board-light: #8f8c86;
+  --board-dark: #5b5853;
+  --board-highlight: rgb(255 94 43 / 0.38);
+}
+
+@theme inline {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-signal: var(--signal);
+  --color-signal-foreground: var(--signal-foreground);
+  --color-success: var(--success);
+
+  --color-board-light: var(--board-light);
+  --color-board-dark: var(--board-dark);
+  --color-board-highlight: var(--board-highlight);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+}
+
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
