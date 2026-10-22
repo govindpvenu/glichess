@@ -37,3 +37,11 @@ if (!parsed.success) {
 
 export const env = parsed.data
 export const isProduction = env.NODE_ENV === "production"
+
+// A dev URL here makes Better Auth reject every sign-in and send OAuth callbacks to localhost.
+if (isProduction && !env.BETTER_AUTH_URL.startsWith("https://")) {
+  console.error(
+    `BETTER_AUTH_URL must be the public https:// origin in production (got "${env.BETTER_AUTH_URL}").`,
+  )
+  process.exit(1)
+}
