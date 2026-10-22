@@ -4,6 +4,8 @@ services:
     name: glichess
     runtime: docker
     plan: free
+    # Same region as the Neon database (AWS ap-southeast-1).
+    region: singapore
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     autoDeploy: true
