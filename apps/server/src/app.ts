@@ -1,10 +1,12 @@
 import { existsSync } from "node:fs"
 import path from "node:path"
 
+import { toNodeHandler } from "better-auth/node"
 import express from "express"
 import helmet from "helmet"
 import { pinoHttp } from "pino-http"
 
+import { auth } from "./auth"
 import { env, isProduction } from "./env"
 import { logger } from "./logger"
 
@@ -13,7 +15,16 @@ export function createApp() {
 
   app.disable("x-powered-by")
   app.set("trust proxy", 1)
-  app.use(helmet())
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          // Google profile pictures.
+          "img-src": ["'self'", "data:", "https://*.googleusercontent.com"],
+        },
+      },
+    }),
+  )
   app.use(
     pinoHttp({
       logger,
@@ -29,6 +40,8 @@ export function createApp() {
       },
     }),
   )
+  // Better Auth parses its own request bodies, so it must be mounted before express.json().
+  app.all("/api/auth/{*splat}", toNodeHandler(auth))
   app.use(express.json({ limit: "100kb" }))
 
   // Must stay free of database and Redis calls so pings don't wake Neon or spend Upstash commands.

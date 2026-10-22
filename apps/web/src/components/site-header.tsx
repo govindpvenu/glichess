@@ -3,6 +3,7 @@ import { NavLink } from "react-router"
 import { ConnectionIndicator } from "@/components/connection-indicator"
 import { Logo } from "@/components/logo"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { UserMenu } from "@/components/user-menu"
 import { cn } from "@/lib/utils"
 
 const upcoming = ["Puzzles", "Leaderboard"]
@@ -10,7 +11,7 @@ const upcoming = ["Puzzles", "Leaderboard"]
 export function SiteHeader() {
   return (
     <header className="border-b">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-8 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:gap-8 sm:px-6">
         <Logo />
         <nav className="hidden items-center gap-6 text-sm sm:flex">
           <NavLink
@@ -34,6 +35,7 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           <ConnectionIndicator />
           <ThemeToggle />
+          <UserMenu />
         </div>
       </div>
     </header>

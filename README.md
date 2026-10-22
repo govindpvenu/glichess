@@ -2,7 +2,8 @@
 
 Realtime chess with built-in video, voice and chat on one screen. Play as a guest or sign in with Google.
 
-> Status: Phase 0 (foundation). Gameplay, auth, chat and video land in the next phases.
+> Status: Phase 1 (identity). Visitors get a guest account automatically and can upgrade with Google.
+> Gameplay, chat and video land in the next phases.
 
 ## Stack
 
@@ -41,6 +42,29 @@ pnpm install
 cp .env.example .env
 pnpm dev                 # web on http://localhost:5173, server on :3000
 ```
+
+## Authentication
+
+Better Auth runs inside the Express server and stores users and sessions in Neon via Drizzle.
+
+- Every visitor is signed in as a guest on first load (Better Auth's anonymous plugin), with a
+  generated name such as `SwiftRook482`.
+- "Sign in with Google" links the guest to a Google account. The `onLinkAccount` hook
+  (`apps/server/src/auth/link-guest.ts`) is where guest-owned data moves to the account before
+  the guest user is deleted.
+- Socket.IO connections are authenticated from the same session cookie during the handshake;
+  connections without a session are rejected.
+
+## Environment
+
+| Variable                                    | Purpose                                                               |
+| ------------------------------------------- | --------------------------------------------------------------------- |
+| `DATABASE_URL`                              | Neon pooled connection string (runtime)                               |
+| `DATABASE_URL_DIRECT`                       | Neon direct connection string (migrations)                            |
+| `BETTER_AUTH_URL`                           | Public origin of the app (`http://localhost:5173` in dev)             |
+| `BETTER_AUTH_SECRET`                        | Session signing secret (`openssl rand -base64 32`)                    |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth client; redirect URI `<origin>/api/auth/callback/google` |
+| `RUN_MIGRATIONS`                            | Apply migrations on boot (defaults to `true` in production)           |
 
 ## Scripts
 

@@ -14,12 +14,14 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm build
 RUN pnpm --filter @glichess/server deploy --prod --legacy /out \
-  && cp -r apps/web/dist /out/public
+  && cp -r apps/web/dist /out/public \
+  && cp -r packages/db/drizzle /out/drizzle
 
 FROM node:${NODE_VERSION}-alpine AS runtime
 ENV NODE_ENV=production \
     PORT=3000 \
-    WEB_DIST_DIR=/app/public
+    WEB_DIST_DIR=/app/public \
+    MIGRATIONS_DIR=/app/drizzle
 WORKDIR /app
 COPY --from=build --chown=node:node /out ./
 USER node

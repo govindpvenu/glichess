@@ -3,14 +3,18 @@ import { io, type Socket } from "socket.io-client"
 
 export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>
 
-/** Single shared connection. Same origin as the page: Vite proxies it in dev, Express serves both in prod. */
+/**
+ * Single shared connection. Same origin as the page: Vite proxies it in dev, Express serves both in prod.
+ * Connected by SessionProvider once a session cookie exists, since the server rejects anonymous handshakes.
+ */
 export const socket: AppSocket = io({
+  autoConnect: false,
   transports: ["websocket", "polling"],
 })
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected"
 
-let status: ConnectionStatus = socket.connected ? "connected" : "connecting"
+let status: ConnectionStatus = "connecting"
 const listeners = new Set<() => void>()
 
 function setStatus(next: ConnectionStatus) {
@@ -23,6 +27,12 @@ socket.on("connect", () => setStatus("connected"))
 socket.on("disconnect", () => setStatus("disconnected"))
 socket.on("connect_error", () => setStatus("disconnected"))
 socket.io.on("reconnect_attempt", () => setStatus("connecting"))
+
+/** Opens a fresh connection, replacing any existing one (e.g. after the signed-in user changes). */
+export function reconnectSocket() {
+  setStatus("connecting")
+  socket.disconnect().connect()
+}
 
 export const connectionStore = {
   subscribe: (listener: () => void) => {

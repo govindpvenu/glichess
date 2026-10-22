@@ -14,3 +14,16 @@ services:
         value: production
       - key: LOG_LEVEL
         value: info
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      # Set these in the Render dashboard (Environment tab).
+      - key: BETTER_AUTH_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_DIRECT
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

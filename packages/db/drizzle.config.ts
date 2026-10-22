@@ -17,6 +17,7 @@ export default defineConfig({
   schema: "./src/schema/index.ts",
   out: "./drizzle",
   dbCredentials: { url },
+  casing: "snake_case",
   strict: true,
   verbose: true,
 })

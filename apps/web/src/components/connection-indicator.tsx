@@ -15,7 +15,7 @@ export function ConnectionIndicator() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <output className="flex h-8 items-center gap-2 rounded-md border px-2.5 font-mono text-xs text-muted-foreground">
+        <output className="flex size-8 items-center justify-center gap-2 rounded-md border font-mono text-xs text-muted-foreground sm:w-auto sm:px-2.5">
           <span
             className={cn(
               "size-1.5 rounded-full",
@@ -24,7 +24,7 @@ export function ConnectionIndicator() {
               status === "disconnected" && "bg-destructive",
             )}
           />
-          <span className="tabular-nums">
+          <span className="hidden tabular-nums sm:inline">
             {status === "connected" && latency !== null ? `${latency}ms` : labels[status]}
           </span>
         </output>

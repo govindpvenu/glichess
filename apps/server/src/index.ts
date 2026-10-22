@@ -1,9 +1,18 @@
 import { createServer } from "node:http"
 
 import { createApp } from "./app"
+import { closeDb } from "./db"
 import { env } from "./env"
 import { logger } from "./logger"
+import { migrateIfEnabled } from "./migrate"
 import { createSocketServer } from "./socket"
+
+try {
+  await migrateIfEnabled()
+} catch (error) {
+  logger.fatal({ err: error }, "database migration failed")
+  process.exit(1)
+}
 
 const httpServer = createServer(createApp())
 const io = createSocketServer(httpServer)
@@ -24,8 +33,10 @@ function shutdown(signal: NodeJS.Signals) {
   forceExit.unref()
 
   void io.close(() => {
-    logger.info("server closed")
-    process.exit(0)
+    void closeDb().finally(() => {
+      logger.info("server closed")
+      process.exit(0)
+    })
   })
 }
 
