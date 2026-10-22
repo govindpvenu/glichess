@@ -2,6 +2,7 @@ import { otherColor, type Color } from "@glichess/shared"
 import { useEffect, useState, type ReactNode } from "react"
 import { Link, useNavigate, useParams } from "react-router"
 
+import { ChatPanel } from "@/components/game/chat-panel"
 import { GameActions } from "@/components/game/game-actions"
 import { GameBoard } from "@/components/game/game-board"
 import { GameStatus } from "@/components/game/game-status"
@@ -39,7 +40,7 @@ function GamePage({ gameId }: { gameId: string }) {
   const lastMove = snapshot.moves.at(-1)?.uci ?? null
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-6 px-4 py-4 sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-4 sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <section className="mx-auto flex w-full max-w-[min(100%,calc(100svh-13rem))] flex-col gap-3">
         <PlayerBar snapshot={snapshot} color={top} offset={offset} isYou={top === myColor} />
         <GameBoard
@@ -77,8 +78,12 @@ function GamePage({ gameId }: { gameId: string }) {
           </div>
         </Panel>
 
-        <Panel title="Moves" meta={`${snapshot.moves.length} ply`} className="min-h-40 flex-1">
+        <Panel title="Moves" meta={`${snapshot.moves.length} ply`} className="min-h-32 flex-1">
           <MoveList moves={snapshot.moves} />
+        </Panel>
+
+        <Panel title="Chat" className="h-80 lg:h-auto lg:min-h-56 lg:flex-[1.4]">
+          <ChatPanel snapshot={snapshot} myColor={myColor} />
         </Panel>
       </aside>
     </div>
@@ -109,7 +114,7 @@ function Panel({
 
 function GameSkeleton() {
   return (
-    <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="mx-auto flex w-full max-w-[min(100%,calc(100svh-13rem))] flex-col gap-3">
         <Skeleton className="h-10 w-full" />
         <Skeleton className="aspect-square w-full" />

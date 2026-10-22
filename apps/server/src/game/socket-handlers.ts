@@ -1,11 +1,10 @@
-import { isTimeControlId, type Ack, type AckResult } from "@glichess/shared"
+import { isTimeControlId } from "@glichess/shared"
 import { z } from "zod"
 
-import { logger } from "../logger"
 import { userRoom, type IoServer, type IoSocket } from "../realtime"
-import { GameError, gameManager, gameRoom, matchmaking } from "./index"
+import { gameIdSchema, handle } from "../socket-handler"
+import { gameManager, gameRoom, matchmaking } from "./index"
 
-const gameIdSchema = z.string().min(1).max(32)
 const timeControlIdSchema = z.string().refine(isTimeControlId, "Unknown time control")
 
 const schemas = {
@@ -22,28 +21,6 @@ const schemas = {
   draw: z.object({ gameId: gameIdSchema, action: z.enum(["offer", "accept", "decline"]) }),
   rematch: z.object({ gameId: gameIdSchema, action: z.enum(["offer", "decline"]) }),
   queue: z.object({ timeControlId: timeControlIdSchema }),
-}
-
-/**
- * Validates the payload, runs the handler and always answers the ack. Expected failures
- * (GameError, bad input) go back to the client; anything else is logged and hidden.
- */
-function handle<S extends z.ZodType, T>(schema: S, run: (input: z.infer<S>) => Promise<T>) {
-  return (payload: unknown, ack: Ack<T>) => {
-    const reply = (result: AckResult<T>) => {
-      if (typeof ack === "function") ack(result)
-    }
-    const parsed = schema.safeParse(payload)
-    if (!parsed.success) return reply({ ok: false, error: "Invalid request" })
-    run(parsed.data).then(
-      (data) => reply({ ok: true, data }),
-      (error: unknown) => {
-        if (error instanceof GameError) return reply({ ok: false, error: error.message })
-        logger.error({ err: error }, "socket handler failed")
-        reply({ ok: false, error: "Something went wrong" })
-      },
-    )
-  }
 }
 
 export function registerGameHandlers(io: IoServer, socket: IoSocket) {

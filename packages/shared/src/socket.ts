@@ -1,3 +1,4 @@
+import type { ChatMessage } from "./chat"
 import type { ColorPreference, GameSnapshot } from "./game"
 import type { TimeControlId } from "./time-control"
 import type { PublicUser } from "./user"
@@ -22,6 +23,8 @@ export interface ServerToClientEvents {
   /** Full game state, sent to everyone in the game room after any change. */
   "game:update": (snapshot: GameSnapshot) => void
   "queue:matched": (payload: { gameId: string }) => void
+  /** A new chat message, sent to both players. */
+  "chat:message": (message: ChatMessage) => void
 }
 
 export interface ClientToServerEvents {
@@ -43,6 +46,10 @@ export interface ClientToServerEvents {
 
   "queue:join": (payload: { timeControlId: TimeControlId }, ack: Ack) => void
   "queue:leave": () => void
+
+  /** The latest messages in a game's chat, oldest first. Players only. */
+  "chat:history": (payload: { gameId: string }, ack: Ack<ChatMessage[]>) => void
+  "chat:send": (payload: { gameId: string; body: string }, ack: Ack<ChatMessage>) => void
 }
 
 export interface InterServerEvents {}

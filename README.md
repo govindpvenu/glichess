@@ -2,8 +2,8 @@
 
 Realtime chess with built-in video, voice and chat on one screen. Play as a guest or sign in with Google.
 
-> Status: Phase 2 (core game). Guest or Google sign-in, invite links, quick pairing, server-side
-> clocks, every end condition, rematches and Glicko-2 ratings. Chat and video land next.
+> Status: Phase 3 (chat). Guest or Google sign-in, invite links, quick pairing, server-side
+> clocks, every end condition, rematches, Glicko-2 ratings and in-game chat. Video lands next.
 
 ## Stack
 
@@ -58,6 +58,16 @@ pnpm dev                 # web on http://localhost:5173, server on :3000
 - **Ratings** use Glicko-2 (`glicko2.ts`, tested against Glickman's worked example). Games are
   rated only when both players are signed in.
 
+## Chat
+
+- Each game has a chat for its two players. Messages are delivered to the players' own Socket.IO
+  rooms rather than the game room, so spectators never receive them, and the server checks the
+  sender's seat on every read and write.
+- Messages are stored in Postgres (`game_messages`) and the client reloads the latest 200 after
+  every reconnect, so nothing is lost across reloads or dropped connections. Sends are optimistic.
+- The server trims and collapses whitespace, caps messages at 280 characters and rate-limits
+  each user with a token bucket (a burst of 5, then one every 2 seconds).
+
 ## Authentication
 
 Better Auth runs inside the Express server and stores users and sessions in Neon via Drizzle.
@@ -65,8 +75,8 @@ Better Auth runs inside the Express server and stores users and sessions in Neon
 - Every visitor is signed in as a guest on first load (Better Auth's anonymous plugin), with a
   generated name such as `SwiftRook482`.
 - "Sign in with Google" links the guest to a Google account. The `onLinkAccount` hook
-  (`apps/server/src/auth/link-guest.ts`) is where guest-owned data moves to the account before
-  the guest user is deleted.
+  (`apps/server/src/auth/link-guest.ts`) moves the guest's games and messages to the account
+  before the guest user is deleted.
 - Socket.IO connections are authenticated from the same session cookie during the handshake;
   connections without a session are rejected.
 

@@ -15,6 +15,7 @@ import {
   type TimeControlId,
 } from "@glichess/shared"
 
+import { ClientError } from "../errors"
 import { logger } from "../logger"
 import { GameEngine, type ActionResult } from "./engine"
 import { DEFAULT_RATING, updateRating, type Rating } from "./glicko2"
@@ -30,7 +31,7 @@ const SWEEP_INTERVAL_MS = 5 * 60_000
 
 export const gameRoom = (gameId: string) => `game:${gameId}`
 
-export class GameError extends Error {}
+export class GameError extends ClientError {}
 
 interface Seat {
   user: PublicUser
@@ -250,6 +251,18 @@ export class GameManager {
     }
     game.rematchOfferBy = null
     this.afterChange(game)
+  }
+
+  /** The two players of a game, loading a finished game from the database if needed. */
+  async players(gameId: string): Promise<{ white: PublicUser | null; black: PublicUser | null }> {
+    const game = this.games.get(gameId) ?? (await this.loadIntoMemory(gameId))
+    if (!game) throw new GameError("Game not found")
+    return { white: game.white?.user ?? null, black: game.black?.user ?? null }
+  }
+
+  /** Resolves once the game's queued writes are saved, so rows can safely reference it. */
+  async whenSaved(gameId: string) {
+    await this.games.get(gameId)?.persistence
   }
 
   /** A guest signed in with Google: their live games now belong to the account. */

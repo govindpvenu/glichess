@@ -4,15 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { useSession } from "@/lib/session"
-import { ackError, socket } from "@/lib/socket"
+import { ACK_TIMEOUT_MS, ackError, socket } from "@/lib/socket"
 
 export interface GameView {
   snapshot: GameSnapshot
   /** serverTime - clientTime when the snapshot arrived; corrects clocks for client clock skew. */
   offset: number
 }
-
-const ACK_TIMEOUT_MS = 10_000
 
 /** Returns true on success; shows the error otherwise. */
 function settle(err: Error | null, res: AckResult | undefined) {

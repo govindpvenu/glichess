@@ -4,6 +4,7 @@ import { fromNodeHeaders } from "better-auth/node"
 import { Server } from "socket.io"
 
 import { auth, toPublicUser } from "./auth"
+import { registerChatHandlers } from "./chat/socket-handlers"
 import { registerGameHandlers } from "./game/socket-handlers"
 import { logger } from "./logger"
 import { userRoom, type IoServer } from "./realtime"
@@ -41,6 +42,7 @@ export function createSocketServer(httpServer: HttpServer): IoServer {
     socket.emit("system:welcome", { user, serverTime: Date.now() })
 
     registerGameHandlers(io, socket)
+    registerChatHandlers(io, socket)
 
     socket.on("system:ping", (ack) => {
       if (typeof ack === "function") ack({ serverTime: Date.now() })

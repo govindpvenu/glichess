@@ -1,5 +1,6 @@
 import type { PublicUser } from "@glichess/shared"
 
+import { transferMessages } from "../chat/repository"
 import { gameManager } from "../game"
 import { transferGames } from "../game/repository"
 import { logger } from "../logger"
@@ -14,7 +15,7 @@ interface LinkedUsers {
  * so everything the guest owns is re-pointed to the account first.
  */
 export async function transferGuestData({ guestId, account }: LinkedUsers) {
-  await transferGames(guestId, account.id)
+  await Promise.all([transferGames(guestId, account.id), transferMessages(guestId, account.id)])
   gameManager.transferUser(guestId, account)
   logger.info({ guestId, accountId: account.id }, "guest linked to account")
 }

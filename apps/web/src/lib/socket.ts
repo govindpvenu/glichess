@@ -12,6 +12,9 @@ export const socket: AppSocket = io({
   transports: ["websocket", "polling"],
 })
 
+/** How long to wait for the server to acknowledge an event before reporting a failure. */
+export const ACK_TIMEOUT_MS = 10_000
+
 export type ConnectionStatus = "connecting" | "connected" | "disconnected"
 
 let status: ConnectionStatus = "connecting"
