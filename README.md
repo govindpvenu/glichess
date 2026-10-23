@@ -2,20 +2,58 @@
 
 Realtime chess with built-in video, voice and chat on one screen. Play as a guest or sign in with Google.
 
-> Status: Phase 4 (video). Guest or Google sign-in, invite links, quick pairing, server-side
-> clocks, every end condition, rematches, Glicko-2 ratings, in-game chat and video/voice calls.
+![Two players in a game: video call and chat on the left, the board in the middle, moves on the right](docs/demo.gif)
+
+Guest or Google sign-in, invite links and quick pairing, server-side clocks with every end
+condition, rematches, Glicko-2 ratings, chat, peer-to-peer video and voice, sounds, and a phone
+layout.
 
 ## Stack
 
-| Layer    | Tech                                                              |
-| -------- | ----------------------------------------------------------------- |
-| Web      | React 19, Vite, Tailwind CSS v4, shadcn/ui, React Router          |
-| Server   | Express 5, Socket.IO, pino                                        |
-| Data     | Neon Postgres, Drizzle ORM, Redis (Upstash)                       |
-| Realtime | Socket.IO for game state and signaling, WebRTC for media          |
-| Chess    | chess.js (server-authoritative validation), react-chessboard      |
-| Auth     | Better Auth (anonymous guests + Google)                           |
-| Tooling  | pnpm workspaces, TypeScript 7, Oxlint (type-aware), Oxfmt, Docker |
+| Layer    | Tech                                                               |
+| -------- | ------------------------------------------------------------------ |
+| Web      | React 19, Vite, Tailwind CSS v4, shadcn/ui, React Router           |
+| Server   | Express 5, Socket.IO, pino                                         |
+| Data     | Neon Postgres, Drizzle ORM                                         |
+| Realtime | Socket.IO for game state and signaling, WebRTC for media           |
+| Chess    | chess.js (server-authoritative validation), react-chessboard       |
+| Auth     | Better Auth (anonymous guests + Google)                            |
+| Testing  | Vitest (engine, ratings, call sessions), Playwright (two browsers) |
+| Tooling  | pnpm workspaces, TypeScript 7, Oxlint (type-aware), Oxfmt, Docker  |
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Players["Two browsers"]
+    direction TB
+    A["White"]
+    B["Black"]
+    A <-. "WebRTC audio and video" .-> B
+  end
+
+  subgraph Render["Render (one Docker container)"]
+    direction TB
+    HTTP["Express: Better Auth, built SPA"]
+    WS["Socket.IO: games, chat, call signalling"]
+    GM["GameManager: live games and clocks in memory"]
+    WS --> GM
+  end
+
+  DB[("Neon Postgres")]
+  TURN["Cloudflare TURN"]
+
+  Players -- "HTTPS" --> HTTP
+  Players -- "WebSocket" --> WS
+  GM -- "queued writes, restore on boot" --> DB
+  HTTP -- "users, sessions" --> DB
+  HTTP -- "short-lived credentials" --> TURN
+  Players -. "media relay when a direct path fails" .- TURN
+```
+
+The server is the single source of truth for each game: browsers send moves and render the
+snapshots it broadcasts. Media is the exception, flowing directly between the two players (or
+through Cloudflare's TURN relay) and never through the server.
 
 ## Layout
 
@@ -67,6 +105,8 @@ pnpm dev                 # web on http://localhost:5173, server on :3000
   every reconnect, so nothing is lost across reloads or dropped connections. Sends are optimistic.
 - The server trims and collapses whitespace, caps messages at 280 characters and rate-limits
   each user with a token bucket (a burst of 5, then one every 2 seconds).
+- Game events (draw and rematch offers, a player leaving, the result) appear as notices among the
+  messages. Players can mute their opponent's messages; the choice is kept in the browser.
 
 ## Video and voice
 
@@ -84,6 +124,14 @@ pnpm dev                 # web on http://localhost:5173, server on :3000
 - Camera and mic start on in invite games and off in quick-paired games. The choice is kept per
   game in session storage and carried into rematches. A speaking indicator uses the Web Audio API.
 
+## Sounds and phones
+
+- Moves, captures, promotions and the start and end of a game play short sounds through the Web
+  Audio API, preloaded and decoded once. A new chat message plays a soft synthesized blip. A
+  header button turns sounds off, and the setting syncs across tabs.
+- On phones the call sits in a compact panel above the board, and moves and chat share tabs below
+  it, with an unread badge on Chat.
+
 ## Authentication
 
 Better Auth runs inside the Express server and stores users and sessions in Neon via Drizzle.
@@ -95,6 +143,28 @@ Better Auth runs inside the Express server and stores users and sessions in Neon
   before the guest user is deleted.
 - Socket.IO connections are authenticated from the same session cookie during the handshake;
   connections without a session are rejected.
+
+## Maintenance
+
+- Every six hours the server removes guest accounts whose sessions have all expired (a guest has
+  no password or provider, so it can never be signed into again), games left with no player, and
+  expired sessions. Finished games keep a removed guest's name. See
+  `apps/server/src/maintenance/cleanup.ts`.
+- Render's free tier sleeps after 15 idle minutes. `.github/workflows/keep-alive.yml` pings
+  `/api/health` every 10 minutes once the `APP_URL` repository variable is set. The health route
+  never touches the database, so the pings don't keep Neon awake.
+
+## Testing
+
+- `pnpm test` runs the Vitest unit tests: the game engine and clocks, Glicko-2, matchmaking, the
+  rate limiter, chat normalisation and call sessions.
+- `pnpm test:e2e` runs Playwright against the dev servers (it starts them if they aren't
+  running). Two browsers play an invite game with moves, sounds, chat, mute, a draw offer,
+  resignation and a rematch; pair through the quick queue; hold a video call using Chromium's fake
+  camera and microphone; and check the phone layout. Run `pnpm exec playwright install chromium`
+  once first.
+- CI runs format, lint, typecheck, unit tests and the build, and a second job runs the end-to-end
+  tests against a throwaway Postgres container.
 
 ## Environment
 
@@ -115,6 +185,7 @@ Better Auth runs inside the Express server and stores users and sessions in Neon
 | `pnpm dev`                        | Run web and server with hot reload                          |
 | `pnpm build`                      | Build every package                                         |
 | `pnpm start`                      | Run the built server (serves the web build)                 |
+| `pnpm test` / `pnpm test:e2e`     | Unit tests (Vitest) / end-to-end tests (Playwright)         |
 | `pnpm lint` / `pnpm typecheck`    | Static checks                                               |
 | `pnpm format`                     | Format with Oxfmt (also sorts imports and Tailwind classes) |
 | `pnpm db:generate` / `db:migrate` | Create and apply Drizzle migrations                         |
@@ -122,8 +193,9 @@ Better Auth runs inside the Express server and stores users and sessions in Neon
 ## Deployment
 
 The `Dockerfile` builds a single image containing the server and the static web build. `render.yaml`
-deploys it to Render's free tier. Neon, Upstash and Cloudflare TURN all have free tiers that cover a
-demo deployment.
+deploys it to Render's free tier. Neon and Cloudflare TURN also have free tiers that cover a demo
+deployment. To keep the free instance awake, add the deployed origin as the `APP_URL` Actions
+variable in the GitHub repository settings.
 
 ```sh
 docker build -t glichess .
