@@ -1,6 +1,6 @@
 # Sounds
 
-These sounds are the "sfx" set from [lila](https://github.com/lichess-org/lila/tree/master/public/sound/sfx),
+These sounds are the "piano" set from [lila](https://github.com/lichess-org/lila/tree/master/public/sound/piano),
 the software behind lichess.org, by [Enigmahack](https://github.com/Enigmahack). They are
 licensed under the GNU Affero General Public License, version 3 or later:
 https://www.gnu.org/licenses/agpl-3.0.html

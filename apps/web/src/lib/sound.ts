@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react"
 
 import { audioContext } from "@/lib/audio"
 
-/** Lichess's "sfx" set (AGPLv3+); see public/sounds/LICENSE.md. */
+/** Lichess's "piano" set (AGPLv3+); see public/sounds/LICENSE.md. */
 const SOUNDS = [
   "move",
   "capture",
