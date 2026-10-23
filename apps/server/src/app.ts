@@ -44,7 +44,7 @@ export function createApp() {
   app.all("/api/auth/{*splat}", toNodeHandler(auth))
   app.use(express.json({ limit: "100kb" }))
 
-  // Must stay free of database and Redis calls so pings don't wake Neon or spend Upstash commands.
+  // Must stay free of database calls, so keep-alive pings don't keep Neon's compute awake.
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", uptime: Math.round(process.uptime()) })
   })

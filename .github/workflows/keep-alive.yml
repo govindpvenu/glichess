@@ -1,0 +1,24 @@
+name: Keep alive
+
+# Render's free tier sleeps after 15 idle minutes and takes about a minute to wake, which would
+# greet the first visitor with a spinner. A ping every 10 minutes keeps it awake; one always-on
+# instance fits in the free 750 hours a month. Set the APP_URL repository variable (Settings →
+# Secrets and variables → Actions → Variables) to the deployed origin to turn this on.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    if: vars.APP_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping /api/health
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        # A cold start can take a minute, hence the long timeout.
+        run: curl --fail --silent --show-error --max-time 100 --retry 2 "$APP_URL/api/health"
