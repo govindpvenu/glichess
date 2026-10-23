@@ -2,47 +2,50 @@ import { useSyncExternalStore } from "react"
 
 import { audioContext } from "@/lib/audio"
 
-type SoundFile = "move" | "capture" | "promote" | "notify"
+/** Lichess's "sfx" set (AGPLv3+); see public/sounds/LICENSE.md. */
+const SOUNDS = [
+  "move",
+  "capture",
+  "check",
+  "notify",
+  "victory",
+  "defeat",
+  "draw",
+  "message",
+] as const
 
-const FILES: Record<SoundFile, string> = {
-  move: "/sounds/move-self.mp3",
-  capture: "/sounds/capture.mp3",
-  promote: "/sounds/promote.mp3",
-  notify: "/sounds/notify.mp3",
-}
+export type Sound = (typeof SOUNDS)[number]
 
-/** Game sounds come from files; "message" (a new chat message) is a short synthesized blip. */
-export type Sound = SoundFile | "message"
-
-const VOLUME = 0.7
+/** Chat is quieter than the game, so a message never drowns out a move. */
+const volume = (sound: Sound) => (sound === "message" ? 0.45 : 0.7)
 const STORAGE_KEY = "glichess-sound"
 
-const files = new Map<SoundFile, Promise<ArrayBuffer | null>>()
-const buffers = new Map<SoundFile, Promise<AudioBuffer | null>>()
+const files = new Map<Sound, Promise<ArrayBuffer | null>>()
+const buffers = new Map<Sound, Promise<AudioBuffer | null>>()
 
 /** Downloads the sound files ahead of the first move. Needs no AudioContext, so it is safe on load. */
 export function preloadSounds() {
-  for (const name of ["move", "capture", "promote", "notify"] as const) void fetchFile(name)
+  for (const sound of SOUNDS) void fetchFile(sound)
 }
 
-function fetchFile(name: SoundFile) {
-  let file = files.get(name)
+function fetchFile(sound: Sound) {
+  let file = files.get(sound)
   if (!file) {
-    file = fetch(FILES[name])
+    file = fetch(`/sounds/${sound}.mp3`)
       .then((res) => (res.ok ? res.arrayBuffer() : null))
       .catch(() => null)
-    files.set(name, file)
+    files.set(sound, file)
   }
   return file
 }
 
-function decode(ctx: AudioContext, name: SoundFile) {
-  let buffer = buffers.get(name)
+function decode(ctx: AudioContext, sound: Sound) {
+  let buffer = buffers.get(sound)
   if (!buffer) {
-    buffer = fetchFile(name).then((data) =>
+    buffer = fetchFile(sound).then((data) =>
       data ? ctx.decodeAudioData(data).catch(() => null) : null,
     )
-    buffers.set(name, buffer)
+    buffers.set(sound, buffer)
   }
   return buffer
 }
@@ -56,35 +59,15 @@ export function playSound(sound: Sound) {
   const ctx = audioContext()
   if (ctx.state !== "running") return
 
-  if (sound === "message") {
-    blip(ctx)
-    return
-  }
   void decode(ctx, sound).then((buffer) => {
     if (!buffer) return
     const source = ctx.createBufferSource()
     const gain = ctx.createGain()
     source.buffer = buffer
-    gain.gain.value = VOLUME
+    gain.gain.value = volume(sound)
     source.connect(gain).connect(ctx.destination)
     source.start()
   })
-}
-
-/** Two soft rising notes: quieter and shorter than the game sounds, so chat never drowns them. */
-function blip(ctx: AudioContext) {
-  const start = ctx.currentTime
-  const gain = ctx.createGain()
-  gain.gain.setValueAtTime(0.0001, start)
-  gain.gain.exponentialRampToValueAtTime(0.08, start + 0.01)
-  gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.22)
-  const osc = ctx.createOscillator()
-  osc.type = "sine"
-  osc.frequency.setValueAtTime(740, start)
-  osc.frequency.setValueAtTime(988, start + 0.07)
-  osc.connect(gain).connect(ctx.destination)
-  osc.start(start)
-  osc.stop(start + 0.25)
 }
 
 /** The sound setting, kept in localStorage and shared across tabs. */
@@ -124,9 +107,9 @@ export function useSoundEnabled() {
   return useSyncExternalStore(subscribe, soundEnabled)
 }
 
-/** The sound for a move, from its SAN: promotion, then capture, else a plain move. */
+/** The sound for a move, from its SAN: check, then capture, else a plain move. */
 export function moveSound(san: string): Sound {
-  if (san.includes("=")) return "promote"
+  if (san.includes("+")) return "check"
   if (san.includes("x")) return "capture"
   return "move"
 }

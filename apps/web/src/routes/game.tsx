@@ -49,7 +49,7 @@ function GamePage({ gameId }: { gameId: string }) {
     if (!chatVisible) setUnread((n) => n + 1)
   })
   const events = useGameEvents(snapshot, view?.offset ?? 0)
-  useGameSounds(snapshot)
+  useGameSounds(snapshot, myColor)
 
   const callSession = call.session
   const rematchId = snapshot?.rematchGameId

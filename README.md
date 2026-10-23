@@ -126,9 +126,11 @@ pnpm dev                 # web on http://localhost:5173, server on :3000
 
 ## Sounds and phones
 
-- Moves, captures, promotions and the start and end of a game play short sounds through the Web
-  Audio API, preloaded and decoded once. A new chat message plays a soft synthesized blip. A
-  header button turns sounds off, and the setting syncs across tabs.
+- Moves, captures, checks, the start of a game and its result (victory, defeat or draw) play
+  short sounds through the Web Audio API, preloaded and decoded once. New chat messages play a
+  quieter chime. A header button turns sounds off, and the setting syncs across tabs.
+- The sounds are lichess's "sfx" set by Enigmahack, licensed AGPLv3+; see
+  `apps/web/public/sounds/LICENSE.md`.
 - On phones the call sits in a compact panel above the board, and moves and chat share tabs below
   it, with an unread badge on Chat.
 
