@@ -5,6 +5,7 @@ import { closeDb } from "./db"
 import { env } from "./env"
 import { gameManager, gameRoom } from "./game"
 import { logger } from "./logger"
+import { scheduleCleanup } from "./maintenance/cleanup"
 import { migrateIfEnabled } from "./migrate"
 import { createSocketServer } from "./socket"
 
@@ -25,6 +26,8 @@ try {
   logger.error({ err: error }, "failed to restore live games")
 }
 
+const stopCleanup = scheduleCleanup()
+
 httpServer.listen(env.PORT, () => {
   logger.info(`glichess server listening on http://localhost:${env.PORT}`)
 })
@@ -41,6 +44,7 @@ function shutdown(signal: NodeJS.Signals) {
   forceExit.unref()
 
   void (async () => {
+    stopCleanup()
     gameManager.stop()
     // Stop taking moves, then let queued game writes reach the database before closing it.
     await new Promise<void>((resolve) => void io.close(() => resolve()))

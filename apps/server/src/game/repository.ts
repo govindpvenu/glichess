@@ -3,7 +3,7 @@ import type { MoveRecord, PublicUser } from "@glichess/shared"
 import { asc, eq, inArray, or, sql } from "drizzle-orm"
 
 import { db } from "../db"
-import type { Rating } from "./glicko2"
+import { DEFAULT_RATING, type Rating } from "./glicko2"
 
 export type GameRow = typeof games.$inferSelect
 export type NewGameRow = typeof games.$inferInsert
@@ -99,9 +99,28 @@ async function hydrate(rows: GameRow[]): Promise<StoredGame[]> {
     moves: moveRows
       .filter((m) => m.gameId === row.id)
       .map((m) => ({ san: m.san, uci: m.uci, clockMs: m.clockMs })),
-    white: row.whiteId ? (profiles.get(row.whiteId) ?? null) : null,
-    black: row.blackId ? (profiles.get(row.blackId) ?? null) : null,
+    white: seatProfile(row, "white", profiles),
+    black: seatProfile(row, "black", profiles),
   }))
+}
+
+/**
+ * A seat's player. Once a player's account is gone (e.g. a removed guest) the seat keeps their
+ * name from the time of the game, so finished games still show who played.
+ */
+function seatProfile(
+  row: GameRow,
+  color: "white" | "black",
+  profiles: Map<string, PlayerProfile>,
+): PlayerProfile | null {
+  const id = color === "white" ? row.whiteId : row.blackId
+  const name = color === "white" ? row.whiteName : row.blackName
+  if (id) return profiles.get(id) ?? null
+  if (!name || row.status === "waiting") return null
+  return {
+    user: { id: `removed:${row.id}:${color}`, name, image: null, isGuest: true },
+    rating: DEFAULT_RATING,
+  }
 }
 
 function toProfile(row: typeof users.$inferSelect): PlayerProfile {
