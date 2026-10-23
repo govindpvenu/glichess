@@ -45,6 +45,10 @@ export function CallPanel({
   const remoteVideo = live && remoteMedia.video && remoteStream ? remoteStream : null
   const localVideo = state.video ? localStream : null
   const showStage = remoteVideo !== null || localVideo !== null
+  // Phones held upright send portrait video; the stage and preview follow each picture's shape.
+  const [remotePortrait, setRemotePortrait] = useState(false)
+  const [localPortrait, setLocalPortrait] = useState(false)
+  const portraitStage = remoteVideo !== null && remotePortrait
   const action =
     state.status === "failed"
       ? { label: "Retry", run: session.rejoin }
@@ -62,9 +66,27 @@ export function CallPanel({
       )}
 
       {showStage && (
-        <div className={cn("relative bg-neutral-950", compact ? "h-44" : "aspect-video")}>
+        <div
+          className={cn(
+            "relative bg-neutral-950",
+            compact
+              ? portraitStage
+                ? "h-72"
+                : "h-44"
+              : portraitStage
+                ? "aspect-[3/4] max-h-96 w-full"
+                : "aspect-video",
+          )}
+        >
           {remoteVideo ? (
-            <StreamVideo stream={remoteVideo} label={`${opponent?.name ?? "Opponent"}'s camera`} />
+            <StreamVideo
+              stream={remoteVideo}
+              label={`${opponent?.name ?? "Opponent"}'s camera`}
+              // A portrait picture in the wide phone stage is shown whole, not cropped to a strip,
+              // and kept to the left so your own preview sits beside it rather than over it.
+              fit={portraitStage && compact ? "contain-left" : "cover"}
+              onShape={setRemotePortrait}
+            />
           ) : (
             <div className="grid size-full place-items-center">
               {opponent && <UserAvatar user={opponent} size="lg" />}
@@ -73,8 +95,18 @@ export function CallPanel({
           <SpeakingRing active={remoteSpeaking} />
 
           {localVideo && (
-            <div className="absolute right-2 bottom-2 aspect-video w-[32%] overflow-hidden rounded-md border border-white/15 bg-black shadow-lg">
-              <StreamVideo stream={localVideo} label="Your camera" mirrored />
+            <div
+              className={cn(
+                "absolute right-2 bottom-2 overflow-hidden rounded-md border border-white/15 bg-black shadow-lg",
+                localPortrait ? "aspect-[3/4] w-[24%]" : "aspect-video w-[32%]",
+              )}
+            >
+              <StreamVideo
+                stream={localVideo}
+                label="Your camera"
+                mirrored
+                onShape={setLocalPortrait}
+              />
               <SpeakingRing active={localSpeaking} />
             </div>
           )}
@@ -226,18 +258,38 @@ function StreamVideo({
   stream,
   label,
   mirrored,
+  fit = "cover",
+  onShape,
 }: {
   stream: MediaStream
   label: string
   mirrored?: boolean
+  fit?: "cover" | "contain-left"
+  /** Called with whether the picture is portrait, again whenever its size changes (a rotated phone). */
+  onShape?: (portrait: boolean) => void
 }) {
   const ref = useRef<HTMLVideoElement>(null)
+  const shapeRef = useRef(onShape)
+
+  useEffect(() => {
+    shapeRef.current = onShape
+  })
 
   useEffect(() => {
     const video = ref.current
     if (!video) return
     video.srcObject = stream
     video.play().catch(() => {})
+    const report = () => {
+      if (video.videoWidth > 0) shapeRef.current?.(video.videoHeight > video.videoWidth)
+    }
+    report()
+    video.addEventListener("loadedmetadata", report)
+    video.addEventListener("resize", report)
+    return () => {
+      video.removeEventListener("loadedmetadata", report)
+      video.removeEventListener("resize", report)
+    }
   }, [stream])
 
   return (
@@ -247,7 +299,11 @@ function StreamVideo({
       autoPlay
       playsInline
       muted
-      className={cn("size-full object-cover", mirrored && "-scale-x-100")}
+      className={cn(
+        "size-full",
+        fit === "cover" ? "object-cover" : "object-contain object-left",
+        mirrored && "-scale-x-100",
+      )}
     />
   )
 }

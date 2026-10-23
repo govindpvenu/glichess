@@ -56,16 +56,23 @@ const initialState = (): CallState => ({
   remoteMedia: OFF,
 })
 
-const constraints: Record<MediaKind, MediaStreamConstraints> = {
-  audio: { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } },
-  video: {
+/**
+ * Phones held upright ask for a portrait picture. Asking a phone for 640×360 makes it crop a
+ * landscape strip out of its portrait camera, which cuts off the face.
+ */
+function constraints(kind: MediaKind): MediaStreamConstraints {
+  if (kind === "audio") {
+    return { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }
+  }
+  const portrait = window.matchMedia("(pointer: coarse) and (orientation: portrait)").matches
+  return {
     video: {
-      width: { ideal: 640 },
-      height: { ideal: 360 },
+      width: { ideal: portrait ? 360 : 640 },
+      height: { ideal: portrait ? 640 : 360 },
       frameRate: { ideal: 24, max: 30 },
       facingMode: "user",
     },
-  },
+  }
 }
 
 /** ICE restarts to try after a failure before giving up and offering a manual retry. */
@@ -398,7 +405,7 @@ export class CallSession {
     this.update({ pending: { ...this.state.pending, [kind]: true }, error: null })
     try {
       if (!window.isSecureContext) throw new DOMException("Insecure context", "SecurityError")
-      const stream = await navigator.mediaDevices.getUserMedia(constraints[kind])
+      const stream = await navigator.mediaDevices.getUserMedia(constraints(kind))
       const [track] = stream.getTracks()
       if (generation !== this.generation || !track) {
         stream.getTracks().forEach((t) => t.stop())
