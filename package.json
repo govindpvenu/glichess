@@ -7,9 +7,10 @@
     "build": "pnpm --recursive build",
     "start": "pnpm --filter @glichess/server start",
     "test": "pnpm --recursive test",
+    "test:e2e": "playwright test",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "typecheck": "pnpm --recursive typecheck",
+    "typecheck": "pnpm --recursive typecheck && tsc -p e2e",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "db:generate": "pnpm --filter @glichess/db generate",
@@ -17,11 +18,11 @@
     "db:studio": "pnpm --filter @glichess/db studio"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@types/node": "^22.20.5",
     "oxfmt": "^0.74.0",
     "oxlint": "^1.89.0",
     "oxlint-tsgolint": "^7.0.2004",
-    "playwright": "^1.64.1",
     "typescript": "~7.0.2",
     "vitest": "^5.0.5"
   },

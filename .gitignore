@@ -7,3 +7,7 @@ dist
 .DS_Store
 *.log
 coverage
+
+# Playwright
+test-results/
+playwright-report/
