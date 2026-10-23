@@ -2,6 +2,7 @@ import { NavLink, useMatch } from "react-router"
 
 import { ConnectionIndicator } from "@/components/connection-indicator"
 import { Logo } from "@/components/logo"
+import { SoundToggle } from "@/components/sound-toggle"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserMenu } from "@/components/user-menu"
 import { cn } from "@/lib/utils"
@@ -39,8 +40,9 @@ export function SiteHeader() {
             </span>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           <ConnectionIndicator />
+          <SoundToggle />
           <ThemeToggle />
           <UserMenu />
         </div>

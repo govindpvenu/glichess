@@ -16,6 +16,7 @@ export function MoveList({ moves }: { moves: MoveRecord[] }) {
   const last = moves.length - 1
   return (
     <ol
+      aria-label="Move list"
       // Keep the latest move in view without scrolling the page.
       ref={(list) => {
         if (list) list.scrollTop = list.scrollHeight

@@ -24,11 +24,14 @@ export function CallPanel({
   myColor,
   session,
   state,
+  compact = false,
 }: {
   snapshot: GameSnapshot
   myColor: Color
   session: CallSession
   state: CallState
+  /** Phones: no header (the status moves under the name) and a shorter video stage. */
+  compact?: boolean
 }) {
   const opponent = snapshot[otherColor(myColor)]
   const { remoteStream, remoteMedia, localStream } = state
@@ -51,25 +54,15 @@ export function CallPanel({
 
   return (
     <section aria-label="Video call" className="shrink-0 overflow-hidden rounded-lg border bg-card">
-      <header className="flex items-center justify-between border-b px-4 py-3">
-        <h2 className="label-mono">Call</h2>
-        <span className="flex items-center gap-1.5 label-mono">
-          <span
-            className={cn(
-              "size-1.5 rounded-full",
-              state.status === "connected"
-                ? "bg-success"
-                : state.status === "failed" || state.status === "unavailable"
-                  ? "bg-destructive"
-                  : "bg-muted-foreground/40",
-            )}
-          />
-          {statusText[state.status]}
-        </span>
-      </header>
+      {!compact && (
+        <header className="flex items-center justify-between border-b px-4 py-3">
+          <h2 className="label-mono">Call</h2>
+          <CallStatusLabel status={state.status} />
+        </header>
+      )}
 
       {showStage && (
-        <div className="relative aspect-video bg-neutral-950">
+        <div className={cn("relative bg-neutral-950", compact ? "h-44" : "aspect-video")}>
           {remoteVideo ? (
             <StreamVideo stream={remoteVideo} label={`${opponent?.name ?? "Opponent"}'s camera`} />
           ) : (
@@ -108,7 +101,13 @@ export function CallPanel({
               />
             )}
           </div>
-          <OpponentLine opponent={opponent} live={live} action={action} />
+          {compact && !action ? (
+            <div className="mt-1">
+              <CallStatusLabel status={state.status} />
+            </div>
+          ) : (
+            <OpponentLine opponent={opponent} live={live} action={action} />
+          )}
         </div>
         <DeviceToggle
           kind="audio"
@@ -127,6 +126,24 @@ export function CallPanel({
 
       <RemoteAudio stream={live ? remoteStream : null} name={opponent?.name ?? "your opponent"} />
     </section>
+  )
+}
+
+function CallStatusLabel({ status }: { status: CallStatus }) {
+  return (
+    <span className="flex items-center gap-1.5 label-mono">
+      <span
+        className={cn(
+          "size-1.5 rounded-full",
+          status === "connected"
+            ? "bg-success"
+            : status === "failed" || status === "unavailable"
+              ? "bg-destructive"
+              : "bg-muted-foreground/40",
+        )}
+      />
+      {statusText[status]}
+    </span>
   )
 }
 

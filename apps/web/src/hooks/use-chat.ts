@@ -1,5 +1,5 @@
 import type { ChatMessage } from "@glichess/shared"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { useSession } from "@/lib/session"
@@ -21,17 +21,29 @@ function merge(current: ChatEntry[], incoming: ChatMessage[]) {
 
 /**
  * A game's chat: loads the history (again after every reconnect, to fill any gap), listens for
- * new messages, and sends with an optimistic entry.
+ * new messages, and sends with an optimistic entry. `onReceive` hears each live message (not the
+ * history), including the echo of your own.
  */
-export function useChat(gameId: string, enabled: boolean) {
+export function useChat(
+  gameId: string,
+  enabled: boolean,
+  onReceive?: (message: ChatMessage) => void,
+) {
   const { user } = useSession()
   const [messages, setMessages] = useState<ChatEntry[]>([])
+  const receiveRef = useRef(onReceive)
+
+  useEffect(() => {
+    receiveRef.current = onReceive
+  })
 
   useEffect(() => {
     if (!enabled) return
     let active = true
     const receive = (message: ChatMessage) => {
-      if (active && message.gameId === gameId) setMessages((current) => merge(current, [message]))
+      if (!active || message.gameId !== gameId) return
+      setMessages((current) => merge(current, [message]))
+      receiveRef.current?.(message)
     }
     const load = () => {
       socket.emit("chat:history", { gameId }, (res) => {

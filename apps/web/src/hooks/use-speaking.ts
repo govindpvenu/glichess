@@ -1,26 +1,12 @@
 import { useEffect, useState } from "react"
 
+import { audioContext } from "@/lib/audio"
+
 /** RMS level (0–1) above which a voice counts as speaking. */
 const THRESHOLD = 0.02
 /** Keeps the indicator on through the short pauses between words. */
 const HOLD_MS = 350
 const SAMPLE_MS = 100
-
-let context: AudioContext | null = null
-
-/** Shared AudioContext. Browsers start it suspended until the page receives a click or key. */
-function audioContext() {
-  if (!context) {
-    const ctx = new AudioContext()
-    context = ctx
-    if (ctx.state === "suspended") {
-      const resume = () => void ctx.resume()
-      document.addEventListener("pointerdown", resume, { once: true })
-      document.addEventListener("keydown", resume, { once: true })
-    }
-  }
-  return context
-}
 
 /** Whether there is voice on an audio track right now. Pass null when the track is off. */
 export function useSpeaking(track: MediaStreamTrack | null) {

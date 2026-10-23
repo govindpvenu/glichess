@@ -83,7 +83,8 @@ export function UserMenu() {
         <Button size="sm" disabled={redirecting} onClick={startGoogleSignIn}>
           <GoogleIcon />
           <span className="hidden sm:inline">Sign in with Google</span>
-          <span className="sm:hidden">Sign in</span>
+          {/* The smallest phones get just the Google mark, so the header fits on one line. */}
+          <span className="max-[25rem]:sr-only sm:hidden">Sign in</span>
         </Button>
       )}
     </div>

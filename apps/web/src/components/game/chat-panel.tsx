@@ -1,10 +1,11 @@
-import { CHAT_MAX_LENGTH, type Color, type GameSnapshot } from "@glichess/shared"
+import { CHAT_MAX_LENGTH, otherColor, type Color, type GameSnapshot } from "@glichess/shared"
 import { SendHorizontal } from "lucide-react"
-import { useLayoutEffect, useRef, useState, type FormEvent } from "react"
+import { useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
-import { useChat, type ChatEntry } from "@/hooks/use-chat"
+import type { ChatEntry } from "@/hooks/use-chat"
 import { useConnectionStatus } from "@/hooks/use-connection"
+import type { GameEvent } from "@/hooks/use-game-events"
 import { cn } from "@/lib/utils"
 
 const QUICK_MESSAGES = ["Hi!", "Good luck", "Have fun", "Good game", "Well played", "Thanks"]
@@ -16,15 +17,50 @@ const COUNTER_THRESHOLD = 40
 
 const timeFormat = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" })
 
+type Item =
+  | { type: "message"; key: string; at: number; pending: boolean; message: ChatEntry }
+  | { type: "event"; key: string; at: number; pending: false; event: GameEvent }
+
 export function ChatPanel({
   snapshot,
   myColor,
+  messages,
+  events,
+  muted,
+  onSend,
 }: {
   snapshot: GameSnapshot
   /** Null for spectators: the chat is private to the players. */
   myColor: Color | null
+  messages: ChatEntry[]
+  events: GameEvent[]
+  /** Hides the opponent's messages. */
+  muted: boolean
+  onSend: (body: string) => Promise<boolean>
 }) {
-  const { messages, send } = useChat(snapshot.id, myColor !== null)
+  const opponent = myColor && snapshot[otherColor(myColor)]
+
+  const items = useMemo(() => {
+    const shown = muted ? messages.filter((m) => m.userId !== opponent?.id) : messages
+    const all: Item[] = [
+      ...shown.map((message) => ({
+        type: "message" as const,
+        key: message.id,
+        at: message.createdAt,
+        pending: !!message.pending,
+        message,
+      })),
+      ...events.map((event) => ({
+        type: "event" as const,
+        key: event.id,
+        at: event.at,
+        pending: false as const,
+        event,
+      })),
+    ]
+    // Unconfirmed messages stay last until the server's copy (with its timestamp) replaces them.
+    return all.toSorted((a, b) => Number(a.pending) - Number(b.pending) || a.at - b.at)
+  }, [messages, events, muted, opponent?.id])
 
   if (!myColor) {
     return (
@@ -41,25 +77,28 @@ export function ChatPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <MessageList messages={messages} snapshot={snapshot} colorOf={colorOf} />
-      <Composer onSend={send} />
+      <MessageList items={items} snapshot={snapshot} colorOf={colorOf} />
+      {muted && opponent && (
+        <p className="border-t px-4 py-2 label-mono">{opponent.name} is muted</p>
+      )}
+      <Composer onSend={onSend} />
     </div>
   )
 }
 
 function MessageList({
-  messages,
+  items,
   snapshot,
   colorOf,
 }: {
-  messages: ChatEntry[]
+  items: Item[]
   snapshot: GameSnapshot
   colorOf: (userId: string | null) => Color | null
 }) {
   const listRef = useRef<HTMLOListElement>(null)
   /** Whether the reader is at the bottom; new messages only scroll the list if so. */
   const pinned = useRef(true)
-  const last = messages.at(-1)
+  const last = items.at(-1)
 
   useLayoutEffect(() => {
     const list = listRef.current
@@ -67,7 +106,7 @@ function MessageList({
     if (list && (pinned.current || last?.pending)) list.scrollTop = list.scrollHeight
   }, [last])
 
-  if (messages.length === 0) return <Notice>No messages yet. Say hello.</Notice>
+  if (items.length === 0) return <Notice>No messages yet. Say hello.</Notice>
 
   return (
     <ol
@@ -80,19 +119,30 @@ function MessageList({
       }}
       className="min-h-0 flex-1 overflow-y-auto px-4 py-3"
     >
-      {messages.map((message, i) => {
-        const previous = messages[i - 1]
+      {items.map((item, i) => {
+        const space = i > 0 && "mt-3"
+        if (item.type === "event") {
+          return (
+            <li key={item.key} className={cn(space, "text-center text-xs text-muted-foreground")}>
+              {item.event.text}
+            </li>
+          )
+        }
+
+        const { message } = item
+        const previous = items[i - 1]
         const grouped =
-          previous?.userId === message.userId &&
-          message.createdAt - previous.createdAt < GROUP_WINDOW_MS
+          previous?.type === "message" &&
+          previous.message.userId === message.userId &&
+          message.createdAt - previous.message.createdAt < GROUP_WINDOW_MS
         const color = colorOf(message.userId)
         // Prefer the player's current name: a guest who signs in keeps their messages.
         const name = (color && snapshot[color]?.name) ?? message.name
 
         return (
           <li
-            key={message.id}
-            className={cn(i > 0 && (grouped ? "mt-1" : "mt-3"), message.pending && "opacity-50")}
+            key={item.key}
+            className={cn(grouped ? "mt-1" : space, message.pending && "opacity-50")}
           >
             {!grouped && (
               <div className="mb-1 flex items-center gap-2">
