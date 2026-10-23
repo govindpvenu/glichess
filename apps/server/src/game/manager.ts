@@ -10,6 +10,7 @@ import {
   type GamePlayer,
   type GameSnapshot,
   type GameSource,
+  type OngoingGame,
   type PublicUser,
   type RematchAction,
   type TimeControlPreset,
@@ -259,6 +260,29 @@ export class GameManager {
   }
 
   /** The two players of a game, loading a finished game from the database if needed. */
+  /** Active games the user is seated in, most urgent first (those they're about to forfeit). */
+  ongoingGames(userId: string): OngoingGame[] {
+    const now = Date.now()
+    const games: OngoingGame[] = []
+    for (const game of this.games.values()) {
+      if (game.engine.status !== "active") continue
+      const color =
+        game.white?.user.id === userId ? "white" : game.black?.user.id === userId ? "black" : null
+      if (!color) continue
+      games.push({
+        gameId: game.id,
+        color,
+        opponent: game[otherColor(color)]?.user ?? null,
+        timeControlId: game.timeControl.id,
+        abandonAt: game.abandon?.color === color ? game.abandon.at : null,
+        serverNow: now,
+      })
+    }
+    return games.toSorted(
+      (a, b) => (a.abandonAt ?? Number.MAX_SAFE_INTEGER) - (b.abandonAt ?? Number.MAX_SAFE_INTEGER),
+    )
+  }
+
   async players(gameId: string): Promise<{ white: PublicUser | null; black: PublicUser | null }> {
     const game = this.games.get(gameId) ?? (await this.loadIntoMemory(gameId))
     if (!game) throw new GameError("Game not found")

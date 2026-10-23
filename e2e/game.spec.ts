@@ -85,3 +85,26 @@ test("quick pair matches two players", async ({ browser }) => {
   for (const page of [first, second]) await expect(page).toHaveURL(/\/game\//)
   expect(second.url()).toBe(first.url())
 })
+
+test("leaving a game shows a way back in the header", async ({ browser }) => {
+  const { white, black } = await startInviteGame(browser)
+  const back = white.getByRole("link", { name: /^Game in progress against / })
+  await expect(back).toBeHidden()
+
+  // Leave through the app's own navigation, as a player would.
+  await white.getByRole("link", { name: "Play", exact: true }).click()
+  await expect(white).toHaveURL(/\/$/)
+  // Being away starts the abandonment countdown, shown on the link.
+  await expect(back).toContainText(/Back to game · \d+s/)
+  await expect(black.getByRole("link", { name: /^Game in progress/ })).toBeHidden()
+
+  await back.click()
+  await expect(white).toHaveURL(/\/game\//)
+  await expect(back).toBeHidden()
+
+  // The link goes away once the game ends, even while the player is elsewhere.
+  await white.getByRole("link", { name: "Play", exact: true }).click()
+  await expect(back).toBeVisible()
+  await black.getByRole("button", { name: "Abort" }).click()
+  await expect(back).toBeHidden()
+})

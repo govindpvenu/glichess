@@ -55,6 +55,10 @@ export function registerGameHandlers(io: IoServer, socket: IoSocket) {
     gameManager.leave(parsed.data.gameId, user().id)
   })
 
+  socket.on("game:ongoing", (ack) => {
+    if (typeof ack === "function") ack({ ok: true, data: gameManager.ongoingGames(user().id) })
+  })
+
   socket.on(
     "game:move",
     handle(schemas.move, async ({ gameId, uci, ply }) => {

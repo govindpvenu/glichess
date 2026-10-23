@@ -71,6 +71,18 @@ export interface GameSnapshot {
   serverNow: number
 }
 
+/** An active game the user is seated in, for the "game in progress" link outside the game page. */
+export interface OngoingGame {
+  gameId: string
+  color: Color
+  opponent: PublicUser | null
+  timeControlId: TimeControlId
+  /** Server time at which the user forfeits by abandonment, set while they're away from the game. */
+  abandonAt: number | null
+  /** Server clock when this was built, used to correct the countdown for client clock skew. */
+  serverNow: number
+}
+
 export const isGameOver = (status: GameStatus) => status === "finished" || status === "aborted"
 
 export const otherColor = (color: Color): Color => (color === "white" ? "black" : "white")

@@ -4,6 +4,7 @@ import { createApp } from "./app"
 import { closeDb } from "./db"
 import { env } from "./env"
 import { gameManager, gameRoom } from "./game"
+import { createOngoingNotifier } from "./game/ongoing"
 import { logger } from "./logger"
 import { scheduleCleanup } from "./maintenance/cleanup"
 import { migrateIfEnabled } from "./migrate"
@@ -19,7 +20,11 @@ try {
 const httpServer = createServer(createApp())
 const io = createSocketServer(httpServer)
 
-gameManager.attach((gameId, snapshot) => io.to(gameRoom(gameId)).emit("game:update", snapshot))
+const notifyOngoing = createOngoingNotifier(io)
+gameManager.attach((gameId, snapshot) => {
+  io.to(gameRoom(gameId)).emit("game:update", snapshot)
+  notifyOngoing(snapshot)
+})
 try {
   await gameManager.restore()
 } catch (error) {

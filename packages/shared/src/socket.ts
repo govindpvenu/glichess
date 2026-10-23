@@ -1,5 +1,5 @@
 import type { ChatMessage } from "./chat"
-import type { ColorPreference, GameSnapshot } from "./game"
+import type { ColorPreference, GameSnapshot, OngoingGame } from "./game"
 import type { CallJoined, MediaState, RtcSignal } from "./rtc"
 import type { TimeControlId } from "./time-control"
 import type { PublicUser } from "./user"
@@ -24,6 +24,8 @@ export interface ServerToClientEvents {
   /** Full game state, sent to everyone in the game room after any change. */
   "game:update": (snapshot: GameSnapshot) => void
   "queue:matched": (payload: { gameId: string }) => void
+  /** The user's games in progress, sent to all their tabs whenever one starts, ends or is left. */
+  "game:ongoing": (games: OngoingGame[]) => void
   /** A new chat message, sent to both players. */
   "chat:message": (message: ChatMessage) => void
 
@@ -45,6 +47,7 @@ export interface ClientToServerEvents {
   /** Opens a game: takes the empty seat of a waiting game, otherwise watches. */
   "game:join": (payload: { gameId: string }, ack: Ack<GameSnapshot>) => void
   "game:leave": (payload: { gameId: string }) => void
+  "game:ongoing": (ack: Ack<OngoingGame[]>) => void
   /** `ply` is the number of moves the client saw before moving; stale moves are rejected. */
   "game:move": (payload: { gameId: string; uci: string; ply: number }, ack: Ack) => void
   "game:resign": (payload: { gameId: string }, ack: Ack) => void
