@@ -28,7 +28,7 @@ export function UserMenu() {
     )
   }
 
-  if (!user) return <Skeleton className="h-8 w-32" />
+  if (!user) return <Skeleton className="size-8 md:w-32" />
 
   const startGoogleSignIn = () => {
     setRedirecting(true)

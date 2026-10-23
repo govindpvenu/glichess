@@ -6,15 +6,26 @@ export function Logo({ className }: { className?: string }) {
   return (
     <Link
       to="/"
+      aria-label="glichess home"
       className={cn(
-        "flex items-center gap-2.5 font-mono text-[17px] font-semibold tracking-tight",
+        "shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4",
         className,
       )}
     >
-      <span aria-hidden className="relative size-3.5 bg-signal">
-        <span className="absolute -right-1.5 -bottom-1.5 size-1.5 bg-foreground" />
-      </span>
-      glichess
+      <img
+        src="/brand/logo-light.svg"
+        alt="glichess"
+        width={1161}
+        height={353}
+        className="h-8 w-auto dark:hidden"
+      />
+      <img
+        src="/brand/logo-dark.svg"
+        alt="glichess"
+        width={1161}
+        height={353}
+        className="hidden h-8 w-auto dark:block"
+      />
     </Link>
   )
 }

@@ -1,4 +1,8 @@
-# glichess
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="apps/web/public/brand/logo-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="apps/web/public/brand/logo-light.svg" />
+  <img alt="glichess" src="apps/web/public/brand/logo-light.svg" width="360" />
+</picture>
 
 Realtime chess with built-in video, voice and chat on one screen. Play as a guest or sign in with Google.
 
